@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Basket Team Tracker</title>
+    <style>
+        /* DESIGN MODERNE & SOMBRE */
+        :root { --primary: #0984e3; --success: #00b894; --danger: #d63031; --bg: #1a1a1a; --card: #2d3436; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center; background-color: var(--bg); color: white; margin: 0; padding: 0; padding-bottom: 80px; user-select: none; -webkit-tap-highlight-color: transparent; }
+        
+        /* NAVIGATION */
+        .navbar { position: fixed; bottom: 0; width: 100%; background: #222; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #333; z-index: 100; backdrop-filter: blur(10px); }
+        .nav-item { color: #666; font-size: 0.75rem; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.2s; }
+        .nav-item span { font-size: 1.4rem; margin-bottom: 3px; }
+        .nav-item.active { color: var(--primary); transform: translateY(-2px); }
+        
+        /* PAGES */
+        .page { display: none; padding: 20px; animation: fadeIn 0.4s; max-width: 600px; margin: 0 auto; }
+        .page.active { display: block; }
+
+        /* LOGIN */
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .login-box { width: 80%; max-width: 300px; }
+        input[type="text"] { width: 100%; padding: 15px; font-size: 1.1rem; border-radius: 12px; border: 2px solid #444; background: #333; color: white; text-align: center; margin-bottom: 20px; outline: none; }
+        input:focus { border-color: var(--primary); }
+
+        /* BOUTONS & STATS */
+        .main-btn { width: 100%; padding: 15px; border: none; border-radius: 12px; color: white; font-weight: bold; font-size: 1rem; cursor: pointer; transition: transform 0.1s; }
+        .main-btn:active { transform: scale(0.98); }
+        .btn-start { background: var(--success); box-shadow: 0 4px 15px rgba(0, 184, 148, 0.4); }
+
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-card { background: var(--card); padding: 15px 5px; border-radius: 12px; border: 1px solid #333; }
+        .stat-num { font-size: 1.8rem; font-weight: 800; display: block; }
+        .stat-lbl { font-size: 0.7rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+
+        .shoot-btns { display: flex; gap: 15px; height: 35vh; margin-bottom: 20px; }
+        .btn-action { flex: 1; border: none; border-radius: 16px; font-size: 1.8rem; color: white; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .miss { background: linear-gradient(145deg, #e17055, #d63031); }
+        .make { background: linear-gradient(145deg, #00b894, #00cec9); }
+
+        /* HISTORIQUE & CLASSEMENT */
+        .list-item { background: var(--card); margin-bottom: 12px; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #444; text-align: left; }
+        .item-left { display: flex; flex-direction: column; }
+        .item-main { font-weight: bold; font-size: 1.1rem; }
+        .item-sub { font-size: 0.8rem; color: #888; margin-top: 4px; }
+        .item-right { font-size: 1.4rem; font-weight: bold; color: var(--success); }
+        
+        .gold { border-left-color: #f1c40f; } 
+        .silver { border-left-color: #bdc3c7; } 
+        .bronze { border-left-color: #e67e22; }
+
+        #voiceBtn { width: 100%; padding: 20px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; margin-bottom: 15px; }
+        #voiceBtn.listening { background: #e17055; animation: pulse 1.5s infinite; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-box">
+            <h1 style="margin-bottom: 30px;">🏀 TEAM TRACKER</h1>
+            <p style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Choisis ton nom de joueur</p>
+            <input type="text" id="pseudo-input" placeholder="Ton blase (ex: TP9)">
+            <button class="main-btn btn-start" onclick="login()">ENTRER SUR LE TERRAIN</button>
+        </div>
+    </div>
+
+    <div id="page-shoot" class="page active">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h2 style="margin:0;">🔥 Séance en cours</h2>
+            <small id="user-display" style="color:var(--primary); font-weight:bold;"></small>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card"><span class="stat-num" id="disp-series">1</span><span class="stat-lbl">Série / 10</span></div>
+            <div class="stat-card"><span class="stat-num" id="disp-shots" style="color:#74b9ff">0</span><span class="stat-lbl">Tirs / 10</span></div>
+            <div class="stat-card"><span class="stat-num" id="disp-total">0%</span><span class="stat-lbl">Réussite</span></div>
+        </div>
+
+        <button id="voiceBtn" onclick="toggleVoice()">🎙️ MICRO : OFF</button>
+        <div id="voiceStatus" style="color:#666; font-size:0.8rem; margin-bottom:10px; height:18px;"></div>
+
+        <div class="shoot-btns">
+            <button class="btn-action miss" onclick="processInput(false)">❌</button>
+            <button class="btn-action make" onclick="processInput(true)">✅</button>
+        </div>
+
+        <button class="main-btn" style="background:#6c5ce7; margin-top:10px;" onclick="finishSession()">💾 TERMINER & ENVOYER</button>
+    </div>
+
+    <div id="page-profile" class="page">
+        <h2>📅 Mon Historique</h2>
+        <button onclick="fetchData()" style="background:none; border:none; color:var(--primary); cursor:pointer; margin-bottom:15px;">🔄 Actualiser</button>
+        <div id="history-list">Chargement...</div>
+    </div>
+
+    <div id="page-rank" class="page">
+        <h2>🏆 Classement Team</h2>
+        <p style="font-size:0.8rem; color:#aaa;">Basé sur le meilleur % de réussite</p>
+        <button onclick="fetchData()" style="background:none; border:none; color:var(--primary); cursor:pointer; margin-bottom:15px;">🔄 Actualiser</button>
+        <div id="leaderboard-list">Chargement...</div>
+    </div>
+
+    <div class="navbar">
+        <div class="nav-item active" onclick="switchTab('shoot', this)"><span>🏀</span>Shoot</div>
+        <div class="nav-item" onclick="switchTab('profile', this)"><span>👤</span>Moi</div>
+        <div class="nav-item" onclick="switchTab('rank', this)"><span>🏆</span>Classement</div>
+    </div>
+
+    <script>
+        // =========================================================
+        // ⚠️ ZONE A MODIFIER PAR L'ADMINISTRATEUR (TOI) ⚠️
+        // Colle ton lien Google Script (celui qui finit par /exec) ici entre les guillemets :
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxN68AC3tCN4caxHOUSfIJtOXTVDROLQ98d2PYEo6sN62qCGQP2-E3Ews931BPlfNx6tw/exec"; 
+        // =========================================================
+
+        let currentUser = localStorage.getItem('basket_user');
+        
+        // GAME STATE
+        let currentSeries = 1;
+        let shotsInSeries = 0;
+        let makesInSeries = 0;
+        let totalMakes = 0;
+        let totalShots = 0;
+        let detailsStr = "";
+        const maxSeries = 10;
+        const shotsPerSeries = 10;
+
+        // INIT
+        if (currentUser) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('user-display').innerText = currentUser;
+            if(GOOGLE_SCRIPT_URL.includes("TON_LIEN")) alert("⚠️ Attention Admin : Tu n'as pas configuré le lien Google Script dans le code !");
+        }
+
+        function login() {
+            const val = document.getElementById('pseudo-input').value.trim();
+            if (val) {
+                localStorage.setItem('basket_user', val);
+                currentUser = val;
+                location.reload();
+            }
+        }
+
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('page-' + tabId).classList.add('active');
+            el.classList.add('active');
+
+            if (tabId === 'profile' || tabId === 'rank') fetchData();
+        }
+
+        // --- GAMEPLAY ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(isMake) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            
+            if (isMake) {
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.1);
+            } else {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+            }
+            
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+        }
+
+        function processInput(isMake) {
+            if (currentSeries > maxSeries) return alert("Séance terminée ! Clique sur Sauvegarder.");
+            
+            playSound(isMake);
+            shotsInSeries++; totalShots++;
+            if (isMake) { makesInSeries++; totalMakes++; }
+            
+            updateUI();
+
+            if (shotsInSeries >= shotsPerSeries) {
+                detailsStr += `S${currentSeries}:${makesInSeries} `;
+                setTimeout(() => {
+                    shotsInSeries = 0; makesInSeries = 0; currentSeries++;
+                    updateUI();
+                    if(currentSeries > maxSeries) finishSession();
+                }, 400);
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('disp-series').innerText = (currentSeries > maxSeries ? "FIN" : currentSeries);
+            document.getElementById('disp-shots').innerText = shotsInSeries;
+            let pct = totalShots > 0 ? Math.round((totalMakes / totalShots) * 100) : 0;
+            document.getElementById('disp-total').innerText = pct + "%";
+        }
+
+        // --- CLOUD SYNC ---
+        function finishSession() {
+            if (totalShots === 0) return;
+            if (!confirm("Envoyer le résultat ?")) return;
+
+            const pct = Math.round((totalMakes / totalShots) * 100);
+            const data = { pseudo: currentUser, reussis: totalMakes, total: totalShots, pct: pct, details: detailsStr };
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST', mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(() => {
+                alert("Score envoyé !");
+                // Reset
+                currentSeries = 1; shotsInSeries = 0; makesInSeries = 0; totalMakes = 0; totalShots = 0; detailsStr="";
+                updateUI();
+                switchTab('rank', document.querySelectorAll('.nav-item')[2]);
+            }).catch(e => alert("Erreur connexion"));
+        }
+
+        function fetchData() {
+            const pList = document.getElementById('history-list');
+            const rList = document.getElementById('leaderboard-list');
+            
+            fetch(GOOGLE_SCRIPT_URL)
+                .then(res => res.json())
+                .then(data => {
+                    // 1. FILTER FOR PROFILE
+                    const myData = data.filter(r => r.pseudo.toLowerCase() === currentUser.toLowerCase()).reverse(); // Plus récent en haut
+                    
+                    if(myData.length === 0) pList.innerHTML = "<p>Aucune séance pour l'instant.</p>";
+                    else {
+                        pList.innerHTML = myData.map(r => {
+                            let d = new Date(r.date);
+                            return `
+                            <div class="list-item" style="border-left-color:${getColor(r.pct)}">
+                                <div class="item-left">
+                                    <span class="item-main">${d.getDate()}/${d.getMonth()+1}</span>
+                                    <span class="item-sub">${r.reussis}/${r.total} tirs</span>
+                                </div>
+                                <span class="item-right" style="color:${getColor(r.pct)}">${r.pct}%</span>
+                            </div>`;
+                        }).join('');
+                    }
+
+                    // 2. LEADERBOARD (Top Scores)
+                    // On trie par pourcentage décroissant
+                    data.sort((a, b) => b.pct - a.pct);
+                    rList.innerHTML = data.map((r, index) => {
+                        let rank = index + 1;
+                        let medal = "";
+                        let borderClass = "";
+                        if(rank===1) { medal="🥇"; borderClass="gold"; }
+                        else if(rank===2) { medal="🥈"; borderClass="silver"; }
+                        else if(rank===3) { medal="🥉"; borderClass="bronze"; }
+                        else medal = "#"+rank;
+
+                        let d = new Date(r.date);
+
+                        return `
+                        <div class="list-item ${borderClass}">
+                            <div class="item-left" style="flex-direction:row; align-items:center;">
+                                <span style="font-size:1.5rem; width:40px;">${medal}</span>
+                                <div>
+                                    <span class="item-main">${r.pseudo}</span>
+                                    <div class="item-sub">${d.getDate()}/${d.getMonth()+1} • ${r.reussis}/${r.total}</div>
+                                </div>
+                            </div>
+                            <span class="item-right">${r.pct}%</span>
+                        </div>`;
+                    }).join('');
+
+                })
+                .catch(e => {
+                    console.error(e);
+                    document.getElementById('history-list').innerText = "Erreur de chargement...";
+                });
+        }
+
+        function getColor(pct) {
+            if(pct >= 70) return '#00b894'; // Vert
+            if(pct >= 50) return '#fdcb6e'; // Orange
+            return '#d63031'; // Rouge
+        }
+
+        // --- VOICE RECOGNITION ---
+        let recognition;
+        let isListening = false;
+        function toggleVoice() {
+            if (!('webkitSpeechRecognition' in window)) return alert("Vocal non supporté sur ce navigateur");
+            
+            if (isListening) { 
+                recognition.stop(); 
+                isListening = false; 
+                document.getElementById('voiceBtn').classList.remove('listening');
+                document.getElementById('voiceBtn').innerText = "🎙️ MICRO : OFF";
+            } else {
+                recognition = new webkitSpeechRecognition();
+                recognition.lang = 'fr-FR';
+                recognition.continuous = false;
+                recognition.interimResults = false;
+
+                recognition.onstart = () => { 
+                    isListening = true; 
+                    document.getElementById('voiceBtn').classList.add('listening');
+                    document.getElementById('voiceBtn').innerText = "🛑 STOP (Je t'écoute)";
+                };
+                
+                recognition.onend = () => { 
+                    if(isListening && currentSeries <= maxSeries) recognition.start(); // Auto-restart
+                    else {
+                         isListening = false;
+                         document.getElementById('voiceBtn').classList.remove('listening');
+                         document.getElementById('voiceBtn').innerText = "🎙️ MICRO : OFF";
+                    }
+                };
+
+                recognition.onresult = (event) => {
+                    const txt = event.results[0][0].transcript.toLowerCase();
+                    document.getElementById('voiceStatus').innerText = "Entendu : " + txt;
+                    if (txt.match(/oui|ok|yes|marqué|dedans/)) processInput(true);
+                    else if (txt.match(/non|no|raté|zut|pas/)) processInput(false);
+                };
+
+                recognition.start();
+            }
+        }
+    </script>
+</body>
+</html>
