@@ -3,427 +3,383 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Basket Pro V8.2</title>
+    <title>Basket Pro V9 (Clean Code)</title>
     <style>
-        :root { --primary: #0984e3; --success: #00b894; --danger: #ff4757; --bg: #1a1a1a; --card: #2d3436; --text-muted: #a4b0be; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center; background-color: var(--bg); color: white; margin: 0; padding: 0; padding-bottom: 90px; user-select: none; -webkit-tap-highlight-color: transparent; }
+        /* --- DESIGN SYSTEM (CSS) --- */
+        :root { --primary: #0984e3; --success: #00b894; --danger: #ff4757; --bg: #1a1a1a; --card: #2d3436; --text: #dfe6e9; }
+        body { font-family: sans-serif; text-align: center; background-color: var(--bg); color: var(--text); margin: 0; padding-bottom: 90px; user-select: none; }
         
-        /* NAVIGATION */
-        .navbar { position: fixed; bottom: 0; width: 100%; background: #222; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #333; z-index: 100; backdrop-filter: blur(10px); }
-        .nav-item { color: #666; font-size: 0.75rem; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.2s; }
-        .nav-item span { font-size: 1.4rem; margin-bottom: 3px; }
+        /* Navigation */
+        .navbar { position: fixed; bottom: 0; width: 100%; background: #222; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #333; z-index: 100; }
+        .nav-item { color: #666; font-size: 0.8rem; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
         .nav-item.active { color: var(--primary); transform: translateY(-2px); }
-        
-        /* PAGES */
-        .page { display: none; padding: 15px; animation: fadeIn 0.4s; max-width: 600px; margin: 0 auto; }
+        .nav-icon { font-size: 1.5rem; margin-bottom: 3px; }
+
+        /* Pages */
+        .page { display: none; padding: 20px; max-width: 600px; margin: 0 auto; animation: fadeIn 0.3s; }
         .page.active { display: block; }
 
-        /* HEADER USER */
-        .user-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background: #222; padding: 10px 15px; border-radius: 12px; border: 1px solid #333; }
-        .logout-btn { background: none; border: 1px solid #444; color: #aaa; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; }
-
-        /* STATS CARDS */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
-        .stat-card { background: var(--card); padding: 15px 5px; border-radius: 12px; border: 1px solid #333; }
-        .stat-num { font-size: 1.6rem; font-weight: 800; display: block; }
-        .stat-lbl { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
-
-        /* SHOOT BUTTONS */
-        .shoot-btns { display: flex; gap: 12px; height: 35vh; margin-bottom: 20px; }
-        .btn-action { flex: 1; border: none; border-radius: 18px; font-size: 2rem; color: white; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: transform 0.1s; }
-        .btn-action:active { transform: scale(0.96); }
-        .miss { background: linear-gradient(145deg, #e17055, var(--danger)); }
-        .make { background: linear-gradient(145deg, var(--success), #00cec9); }
-
-        /* TAB CONTROLS (Classement) */
-        .tabs-control { display: flex; background: #333; border-radius: 8px; padding: 4px; margin-bottom: 20px; }
-        .tab-btn { flex: 1; padding: 8px; border: none; background: none; color: #888; border-radius: 6px; font-size: 0.85rem; font-weight: bold; cursor: pointer; }
-        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-
-        /* LIST ITEMS (Historique & Leaderboard) */
-        .list-item { background: var(--card); margin-bottom: 12px; border-radius: 12px; overflow: hidden; border: 1px solid #333; text-align: left; transition: transform 0.2s; }
-        .list-item:active { transform: scale(0.99); }
-        
-        .item-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .rank-badge { font-size: 1.2rem; width: 35px; text-align: center; }
-        .user-info { flex-grow: 1; padding-left: 10px; }
-        .user-name { font-weight: bold; font-size: 1.1rem; color: white; display: block; }
-        .user-meta { font-size: 0.75rem; color: #888; }
-        .score-badge { font-size: 1.3rem; font-weight: 800; color: var(--success); }
-
-        /* DETAIL GRID (Tic/Croix) */
-        .session-details { background: #222; padding: 10px; display: none; border-top: 1px solid #444; }
-        .detail-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem; }
-        .row-label { width: 60px; color: #aaa; font-weight: bold; }
-        .row-grid { flex: 1; display: flex; gap: 4px; justify-content: center; }
-        .shot-mark { width: 18px; height: 18px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; }
-        .mark-yes { background: rgba(0, 184, 148, 0.2); color: var(--success); border: 1px solid var(--success); }
-        .mark-no { background: rgba(255, 71, 87, 0.15); color: var(--danger); border: 1px solid var(--danger); }
-        .row-total { width: 40px; text-align: right; font-weight: bold; }
-
-        /* LOGIN */
+        /* Login */
         #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        input[type="text"] { width: 80%; max-width: 300px; padding: 15px; font-size: 1.1rem; border-radius: 12px; border: 2px solid #444; background: #333; color: white; text-align: center; margin-bottom: 20px; outline: none; }
-        input:focus { border-color: var(--primary); }
+        input { padding: 15px; font-size: 1.1rem; border-radius: 10px; border: 1px solid #444; background: #333; color: white; text-align: center; margin-bottom: 20px; width: 70%; }
+        
+        /* Stats Cards */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-card { background: var(--card); padding: 15px 5px; border-radius: 12px; border: 1px solid #333; }
+        .stat-val { font-size: 1.8rem; font-weight: bold; display: block; }
+        .stat-lbl { font-size: 0.7rem; color: #aaa; text-transform: uppercase; }
 
-        #voiceBtn { width: 100%; padding: 15px; background: #2d3436; color: white; border: 1px solid #444; border-radius: 12px; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        #voiceBtn.listening { background: #e17055; border-color: #e17055; animation: pulse 1.5s infinite; }
+        /* Buttons */
+        .btn { border: none; border-radius: 12px; cursor: pointer; font-weight: bold; color: white; transition: transform 0.1s; }
+        .btn:active { transform: scale(0.96); }
+        .btn-main { width: 100%; padding: 15px; background: var(--primary); font-size: 1rem; }
+        .btn-danger { background: var(--danger); }
+        .btn-success { background: var(--success); }
+        
+        .shoot-btns { display: flex; gap: 15px; height: 35vh; margin-bottom: 20px; }
+        .btn-shoot { flex: 1; font-size: 2rem; border-radius: 20px; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        .miss { background: linear-gradient(145deg, #e17055, #d63031); }
+        .make { background: linear-gradient(145deg, #00b894, #00cec9); }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        /* Lists & Details */
+        .list-item { background: var(--card); margin-bottom: 12px; padding: 15px; border-radius: 10px; text-align: left; border-left: 4px solid #444; }
+        .item-head { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .item-title { font-weight: bold; font-size: 1.1rem; }
+        .item-sub { font-size: 0.8rem; color: #888; }
+        .item-score { font-size: 1.4rem; font-weight: bold; }
+
+        .details-box { display: none; margin-top: 15px; padding-top: 10px; border-top: 1px solid #444; }
+        .detail-row { display: flex; margin-bottom: 8px; align-items: center; }
+        .row-lbl { width: 60px; font-size: 0.8rem; color: #888; }
+        .row-marks { flex: 1; display: flex; gap: 3px; flex-wrap: wrap; }
+        .mark { width: 18px; height: 18px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+        .mark-1 { background: rgba(0, 184, 148, 0.2); border: 1px solid var(--success); color: var(--success); }
+        .mark-0 { background: rgba(255, 71, 87, 0.2); border: 1px solid var(--danger); color: var(--danger); }
+
+        /* Debug / Error Message */
+        #status-msg { padding: 10px; margin-bottom: 10px; border-radius: 8px; font-size: 0.8rem; display: none; }
+        .error { background: rgba(255, 71, 87, 0.2); color: #ff6b6b; border: 1px solid #ff6b6b; }
+        .loading { background: rgba(9, 132, 227, 0.2); color: #74b9ff; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
-        <h1 style="margin-bottom: 30px;">🏀 TEAM PRO V8</h1>
-        <p style="color:#888; font-size:0.9rem; margin-bottom:20px;">Ton pseudo pour l'historique :</p>
-        <input type="text" id="pseudo-input" placeholder="Ex: Jordan23">
-        <button onclick="login()" style="padding:15px 40px; background:var(--success); border:none; border-radius:12px; color:white; font-weight:bold; font-size:1rem;">ENTRER</button>
+        <h1>🏀 BASKET V9</h1>
+        <input type="text" id="pseudo-input" placeholder="Ton Pseudo (ex: Curry)">
+        <button class="btn btn-main" onclick="Auth.login()">COMMENCER</button>
     </div>
 
     <div id="page-shoot" class="page active">
-        <div class="user-header">
-            <div><span style="color:#888; font-size:0.8rem;">Joueur :</span> <strong id="user-display" style="color:white; margin-left:5px;">...</strong></div>
-            <button class="logout-btn" onclick="logout()">Changer</button>
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+            <span id="user-display" style="color:var(--primary); font-weight:bold;">Joueur</span>
+            <span onclick="Auth.logout()" style="font-size:0.8rem; color:#666; cursor:pointer;">Déconnexion</span>
         </div>
 
         <div class="stats-grid">
-            <div class="stat-card"><span class="stat-num" id="disp-series">1</span><span class="stat-lbl">Série / 10</span></div>
-            <div class="stat-card"><span class="stat-num" id="disp-shots" style="color:#74b9ff">0</span><span class="stat-lbl">Tirs / 10</span></div>
-            <div class="stat-card"><span class="stat-num" id="disp-total">0%</span><span class="stat-lbl">Global</span></div>
+            <div class="stat-card"><span class="stat-val" id="disp-series">1</span><span class="stat-lbl">Série / 10</span></div>
+            <div class="stat-card"><span class="stat-val" id="disp-shots">0</span><span class="stat-lbl">Tirs / 10</span></div>
+            <div class="stat-card"><span class="stat-val" id="disp-total">0%</span><span class="stat-lbl">Global</span></div>
         </div>
-
-        <button id="voiceBtn" onclick="toggleVoice()"><span>🎙️</span> <span id="voiceTxt">MICRO OFF</span></button>
 
         <div class="shoot-btns">
-            <button class="btn-action miss" onclick="processInput(0)">❌</button>
-            <button class="btn-action make" onclick="processInput(1)">✅</button>
+            <button class="btn btn-shoot miss" onclick="Game.recordShot(0)">❌</button>
+            <button class="btn btn-shoot make" onclick="Game.recordShot(1)">✅</button>
         </div>
 
-        <button onclick="finishSession()" style="width:100%; padding:15px; background:var(--primary); border:none; border-radius:12px; color:white; font-weight:bold; margin-top:10px;">💾 SAUVEGARDER LA SÉANCE</button>
-    </div>
+        <div id="status-msg"></div>
 
-    <div id="page-profile" class="page">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h2 id="profile-title" style="margin:0;">Mon Historique</h2>
-            <button onclick="backToLeaderboard()" id="back-btn" style="display:none; background:#333; color:white; border:none; padding:5px 10px; border-radius:5px;">⬅ Retour</button>
-        </div>
-        <div id="history-list">Chargement...</div>
+        <button class="btn btn-main" onclick="API.saveSession()">💾 SAUVEGARDER</button>
     </div>
 
     <div id="page-rank" class="page">
-        <h2 style="margin-bottom:15px;">🏆 Hall of Fame</h2>
-        
-        <div class="tabs-control">
-            <button class="tab-btn active" onclick="setRankMode('session', this)">Record Session (%)</button>
-            <button class="tab-btn" onclick="setRankMode('serie', this)">Record Série (/10)</button>
+        <h2>🏆 Classement & Historique</h2>
+        <div style="display:flex; gap:10px; margin-bottom:20px;">
+            <button class="btn btn-main" style="flex:1; background:#333;" onclick="UI.renderView('my-history')">Moi</button>
+            <button class="btn btn-main" style="flex:1; background:#333;" onclick="UI.renderView('leaderboard')">Top</button>
         </div>
-
-        <div id="leaderboard-list">Chargement...</div>
+        <div id="data-list">Chargement...</div>
     </div>
 
     <div class="navbar">
-        <div class="nav-item active" onclick="switchTab('shoot', this)"><span>🏀</span>Tracker</div>
-        <div class="nav-item" onclick="showMyProfile(this)"><span>👤</span>Moi</div>
-        <div class="nav-item" onclick="switchTab('rank', this)"><span>🏆</span>Classement</div>
+        <div class="nav-item active" onclick="UI.switchTab('shoot', this)">
+            <span class="nav-icon">🏀</span><span>Jeu</span>
+        </div>
+        <div class="nav-item" onclick="UI.switchTab('rank', this)">
+            <span class="nav-icon">🏆</span><span>Stats</span>
+        </div>
     </div>
 
     <script>
         // =========================================================
-        // TON LIEN EST DEJA INTEGRE ICI :
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxN68AC3tCN4caxHOUSfIJtOXTVDROLQ98d2PYEo6sN62qCGQP2-E3Ews931BPlfNx6tw/exec"; 
+        // ⚙️ CONFIGURATION
         // =========================================================
+        const CONFIG = {
+            // Colle ton lien /exec ici :
+            SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxN68AC3tCN4caxHOUSfIJtOXTVDROLQ98d2PYEo6sN62qCGQP2-E3Ews931BPlfNx6tw/exec",
+            MAX_SERIES: 10,
+            SHOTS_PER_SERIES: 10
+        };
 
-        let currentUser = localStorage.getItem('basket_user_v8');
-        let allData = []; 
-        let rankMode = 'session'; 
+        // =========================================================
+        // 🎮 GAME LOGIC (Le Cerveau)
+        // =========================================================
+        const Game = {
+            state: {
+                currentSeries: 1,
+                shotsHistory: [], // [0, 1, 1...] pour la série en cours
+                sessionData: [],  // ["010101", "111000"] pour les séries finies
+                totalMakes: 0,
+                totalShots: 0
+            },
 
-        // GAME STATE
-        let currentSeries = 1;
-        let shotsHistory = [];
-        let sessionDataStr = []; 
-        let totalMakes = 0;
-        let totalShots = 0;
-        const maxSeries = 10;
-        const shotsPerSeries = 10;
-
-        // INIT
-        if (currentUser) startApp(currentUser);
-
-        function login() {
-            const val = document.getElementById('pseudo-input').value.trim();
-            if (val) {
-                localStorage.setItem('basket_user_v8', val);
-                startApp(val);
-            }
-        }
-
-        function startApp(pseudo) {
-            currentUser = pseudo;
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('user-display').innerText = currentUser;
-            document.getElementById('profile-title').innerText = "Historique de " + currentUser;
-            loadDataFromCloud();
-        }
-
-        function logout() {
-            if(confirm("Changer de joueur ?")) {
-                localStorage.removeItem('basket_user_v8');
-                location.reload();
-            }
-        }
-
-        // --- GAME LOGIC ---
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSound(type) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.frequency.value = type === 1 ? 880 : 150; 
-            if(type===1) osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.1);
-            else osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.2);
-            gain.gain.value = 0.2; osc.start(); osc.stop(audioCtx.currentTime + 0.2);
-        }
-
-        function processInput(result) {
-            if (currentSeries > maxSeries) return alert("Séance terminée !");
-            
-            playSound(result);
-            shotsHistory.push(result);
-            if (result === 1) totalMakes++;
-            totalShots++;
-            updateUI();
-
-            if (shotsHistory.length >= shotsPerSeries) {
-                let seriesStr = shotsHistory.join('');
-                sessionDataStr.push(seriesStr);
-                setTimeout(() => {
-                    shotsHistory = [];
-                    currentSeries++;
-                    updateUI();
-                    if(currentSeries > maxSeries) finishSession();
-                }, 400);
-            }
-        }
-
-        function updateUI() {
-            document.getElementById('disp-series').innerText = (currentSeries > maxSeries ? "FIN" : currentSeries);
-            document.getElementById('disp-shots').innerText = shotsHistory.length;
-            let pct = totalShots > 0 ? Math.round((totalMakes / totalShots) * 100) : 0;
-            document.getElementById('disp-total').innerText = pct + "%";
-        }
-
-        function finishSession() {
-            if (totalShots === 0) return;
-            if (!confirm("Sauvegarder la séance ?")) return;
-
-            let detailsFinal = sessionDataStr.join('|');
-            let pct = Math.round((totalMakes / totalShots) * 100);
-
-            const data = { pseudo: currentUser, reussis: totalMakes, total: totalShots, pct: pct, details: detailsFinal };
-
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST', mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            }).then(() => {
-                alert("✅ Sauvegardé !");
-                resetGame();
-                showMyProfile(); 
-            }).catch(() => alert("Erreur réseau"));
-        }
-
-        function resetGame() {
-            currentSeries = 1; shotsHistory = []; sessionDataStr = []; totalMakes = 0; totalShots = 0;
-            updateUI();
-        }
-
-        // --- DATA LOADING ---
-        function loadDataFromCloud() {
-            if(GOOGLE_SCRIPT_URL.includes("googleusercontent")) {
-                alert("ERREUR CRITIQUE : Lien Google Script invalide (Lien temporaire).");
-                return;
-            }
-
-            fetch(GOOGLE_SCRIPT_URL).then(res => res.json()).then(data => {
-                // Tri par date
-                allData = data.sort((a, b) => new Date(b.date) - new Date(a.date)); 
-                renderLeaderboard();
+            recordShot: function(result) {
+                if (this.state.currentSeries > CONFIG.MAX_SERIES) return alert("Séance terminée !");
                 
-                if(document.getElementById('page-profile').style.display === 'block') {
-                    if(document.getElementById('back-btn').style.display === 'none') renderHistory(currentUser);
+                // Ajout à l'historique
+                this.state.shotsHistory.push(result);
+                this.state.totalShots++;
+                if (result === 1) this.state.totalMakes++;
+
+                UI.updateGameDisplay();
+
+                // Vérification fin de série
+                if (this.state.shotsHistory.length >= CONFIG.SHOTS_PER_SERIES) {
+                    // On convertit le tableau [1,0,1] en chaine "101"
+                    this.state.sessionData.push(this.state.shotsHistory.join(''));
+                    
+                    setTimeout(() => {
+                        this.state.shotsHistory = []; // Reset pour la prochaine série
+                        this.state.currentSeries++;
+                        UI.updateGameDisplay();
+                        if (this.state.currentSeries > CONFIG.MAX_SERIES) API.saveSession();
+                    }, 300);
                 }
-            }).catch(err => {
-                console.error(err);
-                document.getElementById('leaderboard-list').innerHTML = "<p style='color:#e17055'>Erreur d'accès aux données. Vérifie que le Script Google est accessible à 'Tout le monde'.</p>";
-            });
-        }
+            },
 
-        // --- HISTORIQUE & DETAILS VISUELS ---
-        function renderHistory(targetUser) {
-            const list = document.getElementById('history-list');
-            const userSessions = allData.filter(r => r.pseudo.toLowerCase() === targetUser.toLowerCase());
-            
-            if(userSessions.length === 0) {
-                list.innerHTML = "<p style='color:#666; padding:20px;'>Aucune séance trouvée.</p>";
-                return;
+            reset: function() {
+                this.state = { currentSeries: 1, shotsHistory: [], sessionData: [], totalMakes: 0, totalShots: 0 };
+                UI.updateGameDisplay();
             }
+        };
 
-            list.innerHTML = userSessions.map((s, idx) => {
-                let d = new Date(s.date);
-                let dateStr = `${d.getDate()}/${d.getMonth()+1} à ${d.getHours()}h${d.getMinutes()}`;
+        // =========================================================
+        // 🌐 API CLIENT (Le Facteur)
+        // =========================================================
+        const API = {
+            saveSession: function() {
+                if (Game.state.totalShots === 0) return;
+                if (!confirm("Sauvegarder la séance ?")) return;
+
+                UI.showStatus("Envoi en cours...", "loading");
+
+                // Préparation des données
+                // On joint les séries avec un pipe | pour avoir "101010|111000"
+                // Si une seule série (test), ça fera juste "101010"
+                let detailsStr = Game.state.sessionData.join('|');
+                let pct = Math.round((Game.state.totalMakes / Game.state.totalShots) * 100);
+
+                const payload = {
+                    pseudo: Auth.user,
+                    reussis: Game.state.totalMakes,
+                    total: Game.state.totalShots,
+                    pct: pct,
+                    details: detailsStr
+                };
+
+                fetch(CONFIG.SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Important pour Google Script
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(() => {
+                    UI.showStatus("✅ Sauvegardé !", "loading"); // En no-cors on ne peut pas savoir si erreur, on suppose ok
+                    setTimeout(() => {
+                        Game.reset();
+                        UI.hideStatus();
+                        UI.switchTab('rank', document.querySelectorAll('.nav-item')[1]);
+                    }, 1000);
+                })
+                .catch(err => UI.showStatus("❌ Erreur Réseau : " + err, "error"));
+            },
+
+            fetchData: function(callback) {
+                UI.showStatus("Récupération des données...", "loading");
                 
-                // Détection format V8
-                let isV8Format = s.details && (s.details.includes('|') || /^[01]+$/.test(s.details));
+                // Vérif URL
+                if (CONFIG.SCRIPT_URL.includes("googleusercontent")) {
+                    return UI.showStatus("❌ Erreur Config : Mauvais lien Script !", "error");
+                }
 
-                let detailsHTML = "";
-                if(isV8Format) {
-                    let seriesArr = s.details.includes('|') ? s.details.split('|') : [s.details];
-                    detailsHTML = seriesArr.map((seq, i) => {
-                        let score = (seq.match(/1/g) || []).length;
-                        let grid = seq.split('').map(char => 
-                            `<div class="shot-mark ${char==='1'?'mark-yes':'mark-no'}">${char==='1'?'✔':'✖'}</div>`
-                        ).join('');
+                fetch(CONFIG.SCRIPT_URL)
+                .then(res => res.json())
+                .then(data => {
+                    UI.hideStatus();
+                    callback(data);
+                })
+                .catch(err => {
+                    console.error(err);
+                    UI.showStatus("❌ Erreur Lecture (Vérifie les permissions 'Tout le monde' du script)", "error");
+                });
+            }
+        };
+
+        // =========================================================
+        // 👤 AUTHENTIFICATION
+        // =========================================================
+        const Auth = {
+            user: localStorage.getItem('basket_user_v9'),
+            
+            init: function() {
+                if (this.user) {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('user-display').innerText = this.user;
+                }
+            },
+
+            login: function() {
+                const val = document.getElementById('pseudo-input').value.trim();
+                if (val) {
+                    this.user = val;
+                    localStorage.setItem('basket_user_v9', val);
+                    this.init();
+                }
+            },
+
+            logout: function() {
+                if(confirm("Se déconnecter ?")) {
+                    localStorage.removeItem('basket_user_v9');
+                    location.reload();
+                }
+            }
+        };
+
+        // =========================================================
+        // 🎨 UI & AFFICHAGE (Le Peintre)
+        // =========================================================
+        const UI = {
+            updateGameDisplay: function() {
+                let s = Game.state;
+                document.getElementById('disp-series').innerText = (s.currentSeries > CONFIG.MAX_SERIES ? "FIN" : s.currentSeries);
+                document.getElementById('disp-shots').innerText = s.shotsHistory.length;
+                let pct = s.totalShots > 0 ? Math.round((s.totalMakes / s.totalShots) * 100) : 0;
+                document.getElementById('disp-total').innerText = pct + "%";
+            },
+
+            showStatus: function(msg, type) {
+                const el = document.getElementById('status-msg');
+                el.style.display = 'block';
+                el.className = type;
+                el.innerText = msg;
+            },
+            
+            hideStatus: function() {
+                document.getElementById('status-msg').style.display = 'none';
+            },
+
+            switchTab: function(tabId, el) {
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                document.getElementById('page-' + tabId).classList.add('active');
+                if(el) el.classList.add('active');
+
+                if (tabId === 'rank') {
+                    // Par défaut on charge mon historique
+                    this.renderView('my-history');
+                }
+            },
+
+            renderView: function(viewType) {
+                const container = document.getElementById('data-list');
+                container.innerHTML = "Chargement...";
+                
+                API.fetchData((allData) => {
+                    // Tri par date
+                    allData.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    let html = "";
+
+                    if (viewType === 'my-history') {
+                        // Filtre MON pseudo
+                        const myData = allData.filter(r => r.pseudo.toLowerCase() === Auth.user.toLowerCase());
+                        if (myData.length === 0) return container.innerHTML = "Pas encore de stats.";
                         
-                        return `<div class="detail-row">
-                            <div class="row-label">Série ${i+1}</div>
-                            <div class="row-grid">${grid}</div>
-                            <div class="row-total">${score}/${seq.length}</div>
+                        html = myData.map((session, idx) => this.createSessionCard(session, idx)).join('');
+                    
+                    } else if (viewType === 'leaderboard') {
+                        // Classement (Pseudo unique)
+                        let map = {};
+                        allData.forEach(r => {
+                            if (!map[r.pseudo] || r.pct > map[r.pseudo].pct) map[r.pseudo] = r;
+                        });
+                        let ranking = Object.values(map).sort((a,b) => b.pct - a.pct);
+                        
+                        html = ranking.map((r, idx) => `
+                            <div class="list-item" style="border-left-color:${r.pct>=50?'var(--success)':'var(--danger)'}">
+                                <div class="item-head">
+                                    <span style="font-size:1.5rem; width:40px;">#${idx+1}</span>
+                                    <div>
+                                        <div class="item-title">${r.pseudo}</div>
+                                        <div class="item-sub">Record : ${r.reussis}/${r.total}</div>
+                                    </div>
+                                    <div class="item-score">${r.pct}%</div>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                    container.innerHTML = html;
+                });
+            },
+
+            createSessionCard: function(session, idx) {
+                let d = new Date(session.date);
+                let dateStr = `${d.getDate()}/${d.getMonth()+1} - ${d.getHours()}h${d.getMinutes()}`;
+                let color = session.pct >= 50 ? 'var(--success)' : 'var(--danger)';
+                
+                // Génération des détails visuels (Vert/Rouge)
+                let detailsHtml = "";
+                let rawDetails = session.details ? session.details.toString() : "";
+                
+                // On détecte si c'est du "V8/V9" (contient des 0 et 1)
+                if (rawDetails.match(/^[01|]+$/)) {
+                    // On sépare les séries par | ou on prend le bloc entier si pas de |
+                    let series = rawDetails.includes('|') ? rawDetails.split('|') : [rawDetails];
+                    
+                    detailsHtml = series.map((seq, i) => {
+                        let score = (seq.match(/1/g) || []).length;
+                        let marks = seq.split('').map(c => `<div class="mark mark-${c}">${c==1?'✔':''}</div>`).join('');
+                        
+                        return `
+                        <div class="detail-row">
+                            <div class="row-lbl">Série ${i+1}</div>
+                            <div class="row-marks">${marks}</div>
+                            <div style="font-weight:bold; font-size:0.8rem;">${score}/${seq.length}</div>
                         </div>`;
                     }).join('');
                 } else {
-                    detailsHTML = `<p style="font-size:0.8rem; color:#888; text-align:center;">${s.details || "Pas de détails"}</p>`;
+                    detailsHtml = "<div style='font-size:0.8rem; color:#888;'>Ancien format de données</div>";
                 }
 
                 return `
-                <div class="list-item">
-                    <div class="item-header" onclick="toggleDetails(${idx})">
-                        <div class="user-info" style="padding:0;">
-                            <span class="user-name">${dateStr}</span>
-                            <span class="user-meta">${s.reussis}/${s.total} Tirs</span>
+                <div class="list-item" style="border-left-color:${color}">
+                    <div class="item-head" onclick="document.getElementById('det-${idx}').style.display = document.getElementById('det-${idx}').style.display=='block'?'none':'block'">
+                        <div>
+                            <div class="item-title">${dateStr}</div>
+                            <div class="item-sub">${session.reussis}/${session.total} Tirs</div>
                         </div>
-                        <div class="score-badge" style="color:${getColor(s.pct)}">${s.pct}%</div>
+                        <div class="item-score" style="color:${color}">${session.pct}%</div>
                     </div>
-                    <div class="session-details" id="details-${idx}">
-                        ${detailsHTML}
+                    <div class="details-box" id="det-${idx}">
+                        ${detailsHtml}
                     </div>
                 </div>`;
-            }).join('');
-        }
-
-        function toggleDetails(idx) {
-            let el = document.getElementById(`details-${idx}`);
-            el.style.display = el.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function setRankMode(mode, btn) {
-            rankMode = mode;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            renderLeaderboard();
-        }
-
-        function renderLeaderboard() {
-            const list = document.getElementById('leaderboard-list');
-            let usersMap = {};
-            
-            allData.forEach(s => {
-                let p = s.pseudo;
-                if(!usersMap[p]) usersMap[p] = { pseudo: p, bestSession: 0, bestSerie: 0 };
-                
-                if(s.pct > usersMap[p].bestSession) usersMap[p].bestSession = s.pct;
-                
-                if(s.details) {
-                    let cleanDetails = s.details;
-                    if(/^[01|]+$/.test(cleanDetails)) {
-                        let series = cleanDetails.includes('|') ? cleanDetails.split('|') : [cleanDetails];
-                        series.forEach(seq => {
-                            let score = (seq.match(/1/g) || []).length;
-                            let normalizedScore = seq.length > 0 ? Math.round((score / seq.length) * 10) : 0;
-                            if(seq.length < 5) normalizedScore = 0; 
-                            if(normalizedScore > usersMap[p].bestSerie) usersMap[p].bestSerie = normalizedScore;
-                        });
-                    }
-                }
-            });
-
-            let ranking = Object.values(usersMap);
-            if(rankMode === 'session') ranking.sort((a, b) => b.bestSession - a.bestSession);
-            else ranking.sort((a, b) => b.bestSerie - a.bestSerie);
-
-            list.innerHTML = ranking.map((u, idx) => {
-                let rank = idx + 1;
-                let medal = rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":`#${rank}`;
-                let scoreDisplay = rankMode === 'session' ? u.bestSession + "%" : u.bestSerie + "/10";
-                let label = rankMode === 'session' ? "Meilleure Séance" : "Meilleure Série";
-
-                return `
-                <div class="list-item">
-                    <div class="item-header" onclick="viewUserProfile('${u.pseudo}')">
-                        <div class="rank-badge">${medal}</div>
-                        <div class="user-info">
-                            <span class="user-name">${u.pseudo}</span>
-                            <span class="user-meta">${label}</span>
-                        </div>
-                        <div class="score-badge">${scoreDisplay}</div>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-
-        function switchTab(tab, el) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById('page-' + tab).classList.add('active');
-            if(el) el.classList.add('active');
-            if(tab === 'rank') loadDataFromCloud();
-        }
-
-        function showMyProfile(el) {
-            document.getElementById('profile-title').innerText = "Mon Historique";
-            document.getElementById('back-btn').style.display = 'none';
-            renderHistory(currentUser);
-            switchTab('profile', el);
-        }
-
-        function viewUserProfile(targetPseudo) {
-            document.getElementById('profile-title').innerText = "Historique de " + targetPseudo;
-            document.getElementById('back-btn').style.display = 'inline-block';
-            renderHistory(targetPseudo);
-            switchTab('profile', null);
-        }
-
-        function backToLeaderboard() {
-            switchTab('rank', document.querySelectorAll('.nav-item')[2]);
-        }
-
-        function getColor(pct) { return pct >= 70 ? '#00b894' : pct >= 50 ? '#e17055' : '#d63031'; }
-
-        // --- VOCAL ---
-        let recognition; let isListening = false;
-        function toggleVoice() {
-            if (!('webkitSpeechRecognition' in window)) return alert("Vocal non supporté");
-            const btn = document.getElementById('voiceBtn');
-            const txt = document.getElementById('voiceTxt');
-            
-            if(isListening) { 
-                recognition.stop(); isListening=false; 
-                btn.classList.remove('listening'); txt.innerText="MICRO OFF";
-            } else {
-                recognition = new webkitSpeechRecognition();
-                recognition.lang = 'fr-FR'; recognition.continuous = false;
-                recognition.onstart = () => { isListening=true; btn.classList.add('listening'); txt.innerText="JE T'ÉCOUTE..."; };
-                recognition.onend = () => { if(isListening && currentSeries<=maxSeries) recognition.start(); else { isListening=false; btn.classList.remove('listening'); txt.innerText="MICRO OFF"; }};
-                recognition.onresult = (e) => {
-                    let t = e.results[0][0].transcript.toLowerCase();
-                    if(t.match(/oui|ok|yes|marqué/)) processInput(1);
-                    if(t.match(/non|raté|no|zut/)) processInput(0);
-                };
-                recognition.start();
             }
-        }
+        };
+
+        // Démarrage
+        Auth.init();
     </script>
 </body>
 </html>
