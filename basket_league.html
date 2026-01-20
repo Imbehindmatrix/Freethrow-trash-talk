@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Basket Pro V8</title>
+    <title>Basket Pro V8.2</title>
     <style>
         :root { --primary: #0984e3; --success: #00b894; --danger: #ff4757; --bg: #1a1a1a; --card: #2d3436; --text-muted: #a4b0be; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center; background-color: var(--bg); color: white; margin: 0; padding: 0; padding-bottom: 90px; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -131,18 +131,18 @@
 
     <script>
         // =========================================================
-        // ⚠️ COLLE TON LIEN GOOGLE SCRIPT V7 ICI ⚠️
+        // TON LIEN EST DEJA INTEGRE ICI :
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxN68AC3tCN4caxHOUSfIJtOXTVDROLQ98d2PYEo6sN62qCGQP2-E3Ews931BPlfNx6tw/exec"; 
         // =========================================================
 
         let currentUser = localStorage.getItem('basket_user_v8');
-        let allData = []; // Stocke toutes les données téléchargées
-        let rankMode = 'session'; // 'session' ou 'serie'
+        let allData = []; 
+        let rankMode = 'session'; 
 
         // GAME STATE
         let currentSeries = 1;
-        let shotsHistory = []; // [1, 0, 1...] pour la série en cours
-        let sessionDataStr = []; // ["1010101010", "1111100000"...] pour sauvegarde
+        let shotsHistory = [];
+        let sessionDataStr = []; 
         let totalMakes = 0;
         let totalShots = 0;
         const maxSeries = 10;
@@ -181,7 +181,7 @@
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.frequency.value = type === 1 ? 880 : 150; // Aigu si marqué, Grave si raté
+            osc.frequency.value = type === 1 ? 880 : 150; 
             if(type===1) osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.1);
             else osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.2);
             gain.gain.value = 0.2; osc.start(); osc.stop(audioCtx.currentTime + 0.2);
@@ -191,20 +191,16 @@
             if (currentSeries > maxSeries) return alert("Séance terminée !");
             
             playSound(result);
-            shotsHistory.push(result); // On stocke 0 ou 1
+            shotsHistory.push(result);
             if (result === 1) totalMakes++;
             totalShots++;
-            
             updateUI();
 
-            // Fin de série
             if (shotsHistory.length >= shotsPerSeries) {
-                // On transforme [1,0,1] en "101"
                 let seriesStr = shotsHistory.join('');
                 sessionDataStr.push(seriesStr);
-                
                 setTimeout(() => {
-                    shotsHistory = []; // Reset série
+                    shotsHistory = [];
                     currentSeries++;
                     updateUI();
                     if(currentSeries > maxSeries) finishSession();
@@ -223,7 +219,6 @@
             if (totalShots === 0) return;
             if (!confirm("Sauvegarder la séance ?")) return;
 
-            // On joint les séries par un pipe '|' ex: "1010101010|1111111111|..."
             let detailsFinal = sessionDataStr.join('|');
             let pct = Math.round((totalMakes / totalShots) * 100);
 
@@ -236,7 +231,7 @@
             }).then(() => {
                 alert("✅ Sauvegardé !");
                 resetGame();
-                showMyProfile(); // Aller voir le résultat
+                showMyProfile(); 
             }).catch(() => alert("Erreur réseau"));
         }
 
@@ -245,16 +240,24 @@
             updateUI();
         }
 
-        // --- DATA & RANKING ---
+        // --- DATA LOADING ---
         function loadDataFromCloud() {
+            if(GOOGLE_SCRIPT_URL.includes("googleusercontent")) {
+                alert("ERREUR CRITIQUE : Lien Google Script invalide (Lien temporaire).");
+                return;
+            }
+
             fetch(GOOGLE_SCRIPT_URL).then(res => res.json()).then(data => {
-                allData = data.sort((a, b) => new Date(b.date) - new Date(a.date)); // Tri par date récente
+                // Tri par date
+                allData = data.sort((a, b) => new Date(b.date) - new Date(a.date)); 
                 renderLeaderboard();
-                // Si on est sur l'onglet profil, on rafraichit aussi
+                
                 if(document.getElementById('page-profile').style.display === 'block') {
-                    // Si on regarde quelqu'un d'autre, ne pas écraser
                     if(document.getElementById('back-btn').style.display === 'none') renderHistory(currentUser);
                 }
+            }).catch(err => {
+                console.error(err);
+                document.getElementById('leaderboard-list').innerHTML = "<p style='color:#e17055'>Erreur d'accès aux données. Vérifie que le Script Google est accessible à 'Tout le monde'.</p>";
             });
         }
 
@@ -272,11 +275,12 @@
                 let d = new Date(s.date);
                 let dateStr = `${d.getDate()}/${d.getMonth()+1} à ${d.getHours()}h${d.getMinutes()}`;
                 
-                // Génération de la grille visuelle (Tic/Croix)
+                // Détection format V8
+                let isV8Format = s.details && (s.details.includes('|') || /^[01]+$/.test(s.details));
+
                 let detailsHTML = "";
-                if(s.details && s.details.includes('|')) {
-                    // NOUVEAU FORMAT (V8)
-                    let seriesArr = s.details.split('|');
+                if(isV8Format) {
+                    let seriesArr = s.details.includes('|') ? s.details.split('|') : [s.details];
                     detailsHTML = seriesArr.map((seq, i) => {
                         let score = (seq.match(/1/g) || []).length;
                         let grid = seq.split('').map(char => 
@@ -286,12 +290,11 @@
                         return `<div class="detail-row">
                             <div class="row-label">Série ${i+1}</div>
                             <div class="row-grid">${grid}</div>
-                            <div class="row-total">${score}/10</div>
+                            <div class="row-total">${score}/${seq.length}</div>
                         </div>`;
                     }).join('');
                 } else {
-                    // ANCIEN FORMAT (Texte simple)
-                    detailsHTML = `<p style="font-size:0.8rem; color:#888; text-align:center;">${s.details || "Pas de détails visuels (Ancienne version)"}</p>`;
+                    detailsHTML = `<p style="font-size:0.8rem; color:#888; text-align:center;">${s.details || "Pas de détails"}</p>`;
                 }
 
                 return `
@@ -315,7 +318,6 @@
             el.style.display = el.style.display === 'block' ? 'none' : 'block';
         }
 
-        // --- CLASSEMENT INTELLIGENT ---
         function setRankMode(mode, btn) {
             rankMode = mode;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -325,41 +327,32 @@
 
         function renderLeaderboard() {
             const list = document.getElementById('leaderboard-list');
-            
-            // 1. Grouper par utilisateur
             let usersMap = {};
             
             allData.forEach(s => {
                 let p = s.pseudo;
-                if(!usersMap[p]) usersMap[p] = { pseudo: p, bestSession: 0, bestSerie: 0, lastDate: s.date };
+                if(!usersMap[p]) usersMap[p] = { pseudo: p, bestSession: 0, bestSerie: 0 };
                 
-                // Calcul Record Session (%)
                 if(s.pct > usersMap[p].bestSession) usersMap[p].bestSession = s.pct;
                 
-                // Calcul Record Série Unitaire (/10)
-                // On doit analyser le string details
-                if(s.details && s.details.includes('|')) {
-                    let series = s.details.split('|');
-                    series.forEach(seq => {
-                        let score = (seq.match(/1/g) || []).length;
-                        if(score > usersMap[p].bestSerie) usersMap[p].bestSerie = score;
-                    });
-                } else if (s.details && !s.details.includes('|')) {
-                     // Essai de parsing ancien format "S1:8" si possible, sinon ignore
+                if(s.details) {
+                    let cleanDetails = s.details;
+                    if(/^[01|]+$/.test(cleanDetails)) {
+                        let series = cleanDetails.includes('|') ? cleanDetails.split('|') : [cleanDetails];
+                        series.forEach(seq => {
+                            let score = (seq.match(/1/g) || []).length;
+                            let normalizedScore = seq.length > 0 ? Math.round((score / seq.length) * 10) : 0;
+                            if(seq.length < 5) normalizedScore = 0; 
+                            if(normalizedScore > usersMap[p].bestSerie) usersMap[p].bestSerie = normalizedScore;
+                        });
+                    }
                 }
             });
 
-            // 2. Convertir en tableau
             let ranking = Object.values(usersMap);
+            if(rankMode === 'session') ranking.sort((a, b) => b.bestSession - a.bestSession);
+            else ranking.sort((a, b) => b.bestSerie - a.bestSerie);
 
-            // 3. Trier selon le mode choisi
-            if(rankMode === 'session') {
-                ranking.sort((a, b) => b.bestSession - a.bestSession);
-            } else {
-                ranking.sort((a, b) => b.bestSerie - a.bestSerie);
-            }
-
-            // 4. Afficher
             list.innerHTML = ranking.map((u, idx) => {
                 let rank = idx + 1;
                 let medal = rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":`#${rank}`;
@@ -380,13 +373,11 @@
             }).join('');
         }
 
-        // --- NAVIGATION ---
         function switchTab(tab, el) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById('page-' + tab).classList.add('active');
             if(el) el.classList.add('active');
-            
             if(tab === 'rank') loadDataFromCloud();
         }
 
@@ -401,7 +392,7 @@
             document.getElementById('profile-title').innerText = "Historique de " + targetPseudo;
             document.getElementById('back-btn').style.display = 'inline-block';
             renderHistory(targetPseudo);
-            switchTab('profile', null); // On va sur l'onglet sans activer l'icône du bas
+            switchTab('profile', null);
         }
 
         function backToLeaderboard() {
