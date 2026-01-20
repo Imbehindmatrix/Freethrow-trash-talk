@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Basket Team Tracker V7</title>
+    <title>Basket Pro V8</title>
     <style>
-        :root { --primary: #0984e3; --success: #00b894; --danger: #d63031; --bg: #1a1a1a; --card: #2d3436; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center; background-color: var(--bg); color: white; margin: 0; padding: 0; padding-bottom: 80px; user-select: none; -webkit-tap-highlight-color: transparent; }
+        :root { --primary: #0984e3; --success: #00b894; --danger: #ff4757; --bg: #1a1a1a; --card: #2d3436; --text-muted: #a4b0be; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center; background-color: var(--bg); color: white; margin: 0; padding: 0; padding-bottom: 90px; user-select: none; -webkit-tap-highlight-color: transparent; }
         
         /* NAVIGATION */
         .navbar { position: fixed; bottom: 0; width: 100%; background: #222; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #333; z-index: 100; backdrop-filter: blur(10px); }
@@ -15,135 +15,146 @@
         .nav-item.active { color: var(--primary); transform: translateY(-2px); }
         
         /* PAGES */
-        .page { display: none; padding: 20px; animation: fadeIn 0.4s; max-width: 600px; margin: 0 auto; }
+        .page { display: none; padding: 15px; animation: fadeIn 0.4s; max-width: 600px; margin: 0 auto; }
         .page.active { display: block; }
+
+        /* HEADER USER */
+        .user-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background: #222; padding: 10px 15px; border-radius: 12px; border: 1px solid #333; }
+        .logout-btn { background: none; border: 1px solid #444; color: #aaa; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; }
+
+        /* STATS CARDS */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+        .stat-card { background: var(--card); padding: 15px 5px; border-radius: 12px; border: 1px solid #333; }
+        .stat-num { font-size: 1.6rem; font-weight: 800; display: block; }
+        .stat-lbl { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+
+        /* SHOOT BUTTONS */
+        .shoot-btns { display: flex; gap: 12px; height: 35vh; margin-bottom: 20px; }
+        .btn-action { flex: 1; border: none; border-radius: 18px; font-size: 2rem; color: white; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: transform 0.1s; }
+        .btn-action:active { transform: scale(0.96); }
+        .miss { background: linear-gradient(145deg, #e17055, var(--danger)); }
+        .make { background: linear-gradient(145deg, var(--success), #00cec9); }
+
+        /* TAB CONTROLS (Classement) */
+        .tabs-control { display: flex; background: #333; border-radius: 8px; padding: 4px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 8px; border: none; background: none; color: #888; border-radius: 6px; font-size: 0.85rem; font-weight: bold; cursor: pointer; }
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+        /* LIST ITEMS (Historique & Leaderboard) */
+        .list-item { background: var(--card); margin-bottom: 12px; border-radius: 12px; overflow: hidden; border: 1px solid #333; text-align: left; transition: transform 0.2s; }
+        .list-item:active { transform: scale(0.99); }
+        
+        .item-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .rank-badge { font-size: 1.2rem; width: 35px; text-align: center; }
+        .user-info { flex-grow: 1; padding-left: 10px; }
+        .user-name { font-weight: bold; font-size: 1.1rem; color: white; display: block; }
+        .user-meta { font-size: 0.75rem; color: #888; }
+        .score-badge { font-size: 1.3rem; font-weight: 800; color: var(--success); }
+
+        /* DETAIL GRID (Tic/Croix) */
+        .session-details { background: #222; padding: 10px; display: none; border-top: 1px solid #444; }
+        .detail-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem; }
+        .row-label { width: 60px; color: #aaa; font-weight: bold; }
+        .row-grid { flex: 1; display: flex; gap: 4px; justify-content: center; }
+        .shot-mark { width: 18px; height: 18px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+        .mark-yes { background: rgba(0, 184, 148, 0.2); color: var(--success); border: 1px solid var(--success); }
+        .mark-no { background: rgba(255, 71, 87, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+        .row-total { width: 40px; text-align: right; font-weight: bold; }
 
         /* LOGIN */
         #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .login-box { width: 80%; max-width: 300px; }
-        input[type="text"] { width: 100%; padding: 15px; font-size: 1.1rem; border-radius: 12px; border: 2px solid #444; background: #333; color: white; text-align: center; margin-bottom: 20px; outline: none; }
+        input[type="text"] { width: 80%; max-width: 300px; padding: 15px; font-size: 1.1rem; border-radius: 12px; border: 2px solid #444; background: #333; color: white; text-align: center; margin-bottom: 20px; outline: none; }
         input:focus { border-color: var(--primary); }
 
-        /* BOUTONS & STATS */
-        .main-btn { width: 100%; padding: 15px; border: none; border-radius: 12px; color: white; font-weight: bold; font-size: 1rem; cursor: pointer; transition: transform 0.1s; }
-        .main-btn:active { transform: scale(0.98); }
-        .btn-start { background: var(--success); box-shadow: 0 4px 15px rgba(0, 184, 148, 0.4); }
-
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .stat-card { background: var(--card); padding: 15px 5px; border-radius: 12px; border: 1px solid #333; }
-        .stat-num { font-size: 1.8rem; font-weight: 800; display: block; }
-        .stat-lbl { font-size: 0.7rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
-
-        .shoot-btns { display: flex; gap: 15px; height: 35vh; margin-bottom: 20px; }
-        .btn-action { flex: 1; border: none; border-radius: 16px; font-size: 1.8rem; color: white; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .miss { background: linear-gradient(145deg, #e17055, #d63031); }
-        .make { background: linear-gradient(145deg, #00b894, #00cec9); }
-
-        /* LISTES */
-        .list-item { background: var(--card); margin-bottom: 12px; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #444; text-align: left; }
-        .item-left { display: flex; flex-direction: column; }
-        .item-main { font-weight: bold; font-size: 1.1rem; }
-        .item-sub { font-size: 0.8rem; color: #888; margin-top: 4px; }
-        .item-right { font-size: 1.4rem; font-weight: bold; color: var(--success); }
-        
-        .gold { border-left-color: #f1c40f; } .silver { border-left-color: #bdc3c7; } .bronze { border-left-color: #e67e22; }
-
-        #voiceBtn { width: 100%; padding: 20px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; margin-bottom: 15px; }
-        #voiceBtn.listening { background: #e17055; animation: pulse 1.5s infinite; }
-
-        /* HEADER USER */
-        .user-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background: #222; padding: 10px; border-radius: 8px; }
-        .logout-btn { background: none; border: 1px solid #444; color: #aaa; padding: 5px 10px; border-radius: 5px; font-size: 0.7rem; cursor: pointer; }
+        #voiceBtn { width: 100%; padding: 15px; background: #2d3436; color: white; border: 1px solid #444; border-radius: 12px; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        #voiceBtn.listening { background: #e17055; border-color: #e17055; animation: pulse 1.5s infinite; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
-        <div class="login-box">
-            <h1 style="margin-bottom: 30px;">🏀 TEAM TRACKER</h1>
-            <p style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">
-                Entrez exactement le même pseudo<br>pour retrouver votre historique.
-            </p>
-            <input type="text" id="pseudo-input" placeholder="Pseudo (ex: Jordan23)">
-            <button class="main-btn btn-start" onclick="login()">CONNEXION</button>
-        </div>
+        <h1 style="margin-bottom: 30px;">🏀 TEAM PRO V8</h1>
+        <p style="color:#888; font-size:0.9rem; margin-bottom:20px;">Ton pseudo pour l'historique :</p>
+        <input type="text" id="pseudo-input" placeholder="Ex: Jordan23">
+        <button onclick="login()" style="padding:15px 40px; background:var(--success); border:none; border-radius:12px; color:white; font-weight:bold; font-size:1rem;">ENTRER</button>
     </div>
 
     <div id="page-shoot" class="page active">
         <div class="user-header">
-            <div>
-                <span style="color:#888; font-size:0.8rem;">Joueur :</span>
-                <strong id="user-display" style="color:var(--primary); margin-left:5px;">...</strong>
-            </div>
-            <button class="logout-btn" onclick="logout()">Déconnexion</button>
+            <div><span style="color:#888; font-size:0.8rem;">Joueur :</span> <strong id="user-display" style="color:white; margin-left:5px;">...</strong></div>
+            <button class="logout-btn" onclick="logout()">Changer</button>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card"><span class="stat-num" id="disp-series">1</span><span class="stat-lbl">Série / 10</span></div>
             <div class="stat-card"><span class="stat-num" id="disp-shots" style="color:#74b9ff">0</span><span class="stat-lbl">Tirs / 10</span></div>
-            <div class="stat-card"><span class="stat-num" id="disp-total">0%</span><span class="stat-lbl">Réussite</span></div>
+            <div class="stat-card"><span class="stat-num" id="disp-total">0%</span><span class="stat-lbl">Global</span></div>
         </div>
 
-        <button id="voiceBtn" onclick="toggleVoice()">🎙️ MICRO : OFF</button>
-        <div id="voiceStatus" style="color:#666; font-size:0.8rem; margin-bottom:10px; height:18px;"></div>
+        <button id="voiceBtn" onclick="toggleVoice()"><span>🎙️</span> <span id="voiceTxt">MICRO OFF</span></button>
 
         <div class="shoot-btns">
-            <button class="btn-action miss" onclick="processInput(false)">❌</button>
-            <button class="btn-action make" onclick="processInput(true)">✅</button>
+            <button class="btn-action miss" onclick="processInput(0)">❌</button>
+            <button class="btn-action make" onclick="processInput(1)">✅</button>
         </div>
 
-        <button class="main-btn" style="background:#6c5ce7; margin-top:10px;" onclick="finishSession()">💾 SAUVEGARDER</button>
+        <button onclick="finishSession()" style="width:100%; padding:15px; background:var(--primary); border:none; border-radius:12px; color:white; font-weight:bold; margin-top:10px;">💾 SAUVEGARDER LA SÉANCE</button>
     </div>
 
     <div id="page-profile" class="page">
-        <h2>📅 Mon Historique</h2>
-        <p style="font-size:0.8rem; color:#aaa; margin-bottom: 15px;">Chargement automatique des données...</p>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h2 id="profile-title" style="margin:0;">Mon Historique</h2>
+            <button onclick="backToLeaderboard()" id="back-btn" style="display:none; background:#333; color:white; border:none; padding:5px 10px; border-radius:5px;">⬅ Retour</button>
+        </div>
         <div id="history-list">Chargement...</div>
     </div>
 
     <div id="page-rank" class="page">
-        <h2>🏆 Classement Team</h2>
-        <button onclick="fetchData()" style="background:none; border:none; color:var(--primary); cursor:pointer; margin-bottom:15px;">🔄 Actualiser</button>
+        <h2 style="margin-bottom:15px;">🏆 Hall of Fame</h2>
+        
+        <div class="tabs-control">
+            <button class="tab-btn active" onclick="setRankMode('session', this)">Record Session (%)</button>
+            <button class="tab-btn" onclick="setRankMode('serie', this)">Record Série (/10)</button>
+        </div>
+
         <div id="leaderboard-list">Chargement...</div>
     </div>
 
     <div class="navbar">
-        <div class="nav-item active" onclick="switchTab('shoot', this)"><span>🏀</span>Shoot</div>
-        <div class="nav-item" onclick="switchTab('profile', this)"><span>👤</span>Moi</div>
-        <div class="nav-item" onclick="switchTab('rank', this)"><span>🏆</span>Top</div>
+        <div class="nav-item active" onclick="switchTab('shoot', this)"><span>🏀</span>Tracker</div>
+        <div class="nav-item" onclick="showMyProfile(this)"><span>👤</span>Moi</div>
+        <div class="nav-item" onclick="switchTab('rank', this)"><span>🏆</span>Classement</div>
     </div>
 
     <script>
         // =========================================================
-        // ⚠️ REMPLACE TON LIEN ICI ⚠️
+        // ⚠️ COLLE TON LIEN GOOGLE SCRIPT V7 ICI ⚠️
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxN68AC3tCN4caxHOUSfIJtOXTVDROLQ98d2PYEo6sN62qCGQP2-E3Ews931BPlfNx6tw/exec"; 
         // =========================================================
 
-        let currentUser = localStorage.getItem('basket_user');
-        
+        let currentUser = localStorage.getItem('basket_user_v8');
+        let allData = []; // Stocke toutes les données téléchargées
+        let rankMode = 'session'; // 'session' ou 'serie'
+
         // GAME STATE
         let currentSeries = 1;
-        let shotsInSeries = 0;
-        let makesInSeries = 0;
+        let shotsHistory = []; // [1, 0, 1...] pour la série en cours
+        let sessionDataStr = []; // ["1010101010", "1111100000"...] pour sauvegarde
         let totalMakes = 0;
         let totalShots = 0;
-        let detailsStr = "";
         const maxSeries = 10;
         const shotsPerSeries = 10;
 
-        // --- INIT AU DEMARRAGE ---
-        // Si l'utilisateur est déjà enregistré, on saute le login
-        if (currentUser) {
-            startApp(currentUser);
-        }
+        // INIT
+        if (currentUser) startApp(currentUser);
 
         function login() {
             const val = document.getElementById('pseudo-input').value.trim();
             if (val) {
-                localStorage.setItem('basket_user', val);
+                localStorage.setItem('basket_user_v8', val);
                 startApp(val);
             }
         }
@@ -152,57 +163,49 @@
             currentUser = pseudo;
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('user-display').innerText = currentUser;
-            
-            // On lance la récupération des données immédiatement pour "prouver" que le compte existe
-            fetchData(); 
+            document.getElementById('profile-title').innerText = "Historique de " + currentUser;
+            loadDataFromCloud();
         }
 
         function logout() {
-            if(confirm("Se déconnecter ?")) {
-                localStorage.removeItem('basket_user');
+            if(confirm("Changer de joueur ?")) {
+                localStorage.removeItem('basket_user_v8');
                 location.reload();
             }
         }
 
-        function switchTab(tabId, el) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById('page-' + tabId).classList.add('active');
-            el.classList.add('active');
-
-            if (tabId === 'profile' || tabId === 'rank') fetchData();
-        }
-
-        // --- AUDIO & GAMEPLAY ---
+        // --- GAME LOGIC ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSound(isMake) {
+        function playSound(type) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain); gain.connect(audioCtx.destination);
-            if (isMake) {
-                osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.1);
-            } else {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-                osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.2);
-            }
-            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+            osc.frequency.value = type === 1 ? 880 : 150; // Aigu si marqué, Grave si raté
+            if(type===1) osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.1);
+            else osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+            gain.gain.value = 0.2; osc.start(); osc.stop(audioCtx.currentTime + 0.2);
         }
 
-        function processInput(isMake) {
-            if (currentSeries > maxSeries) return alert("Séance terminée ! Clique sur Sauvegarder.");
-            playSound(isMake);
-            shotsInSeries++; totalShots++;
-            if (isMake) { makesInSeries++; totalMakes++; }
+        function processInput(result) {
+            if (currentSeries > maxSeries) return alert("Séance terminée !");
+            
+            playSound(result);
+            shotsHistory.push(result); // On stocke 0 ou 1
+            if (result === 1) totalMakes++;
+            totalShots++;
+            
             updateUI();
-            if (shotsInSeries >= shotsPerSeries) {
-                detailsStr += `S${currentSeries}:${makesInSeries} `;
+
+            // Fin de série
+            if (shotsHistory.length >= shotsPerSeries) {
+                // On transforme [1,0,1] en "101"
+                let seriesStr = shotsHistory.join('');
+                sessionDataStr.push(seriesStr);
+                
                 setTimeout(() => {
-                    shotsInSeries = 0; makesInSeries = 0; currentSeries++;
+                    shotsHistory = []; // Reset série
+                    currentSeries++;
                     updateUI();
                     if(currentSeries > maxSeries) finishSession();
                 }, 400);
@@ -211,114 +214,221 @@
 
         function updateUI() {
             document.getElementById('disp-series').innerText = (currentSeries > maxSeries ? "FIN" : currentSeries);
-            document.getElementById('disp-shots').innerText = shotsInSeries;
+            document.getElementById('disp-shots').innerText = shotsHistory.length;
             let pct = totalShots > 0 ? Math.round((totalMakes / totalShots) * 100) : 0;
             document.getElementById('disp-total').innerText = pct + "%";
         }
 
-        // --- CLOUD SYNC ---
         function finishSession() {
             if (totalShots === 0) return;
-            if (!confirm("Envoyer le résultat ?")) return;
+            if (!confirm("Sauvegarder la séance ?")) return;
 
-            const pct = Math.round((totalMakes / totalShots) * 100);
-            const data = { pseudo: currentUser, reussis: totalMakes, total: totalShots, pct: pct, details: detailsStr };
+            // On joint les séries par un pipe '|' ex: "1010101010|1111111111|..."
+            let detailsFinal = sessionDataStr.join('|');
+            let pct = Math.round((totalMakes / totalShots) * 100);
+
+            const data = { pseudo: currentUser, reussis: totalMakes, total: totalShots, pct: pct, details: detailsFinal };
 
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST', mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             }).then(() => {
-                alert("Score envoyé !");
-                currentSeries = 1; shotsInSeries = 0; makesInSeries = 0; totalMakes = 0; totalShots = 0; detailsStr="";
-                updateUI();
-                switchTab('rank', document.querySelectorAll('.nav-item')[2]);
-            }).catch(e => alert("Erreur connexion"));
+                alert("✅ Sauvegardé !");
+                resetGame();
+                showMyProfile(); // Aller voir le résultat
+            }).catch(() => alert("Erreur réseau"));
         }
 
-        function fetchData() {
-            const pList = document.getElementById('history-list');
-            const rList = document.getElementById('leaderboard-list');
+        function resetGame() {
+            currentSeries = 1; shotsHistory = []; sessionDataStr = []; totalMakes = 0; totalShots = 0;
+            updateUI();
+        }
+
+        // --- DATA & RANKING ---
+        function loadDataFromCloud() {
+            fetch(GOOGLE_SCRIPT_URL).then(res => res.json()).then(data => {
+                allData = data.sort((a, b) => new Date(b.date) - new Date(a.date)); // Tri par date récente
+                renderLeaderboard();
+                // Si on est sur l'onglet profil, on rafraichit aussi
+                if(document.getElementById('page-profile').style.display === 'block') {
+                    // Si on regarde quelqu'un d'autre, ne pas écraser
+                    if(document.getElementById('back-btn').style.display === 'none') renderHistory(currentUser);
+                }
+            });
+        }
+
+        // --- HISTORIQUE & DETAILS VISUELS ---
+        function renderHistory(targetUser) {
+            const list = document.getElementById('history-list');
+            const userSessions = allData.filter(r => r.pseudo.toLowerCase() === targetUser.toLowerCase());
             
-            fetch(GOOGLE_SCRIPT_URL)
-                .then(res => res.json())
-                .then(data => {
-                    // TRI PAR DATE (Récent en premier)
-                    data.sort((a, b) => new Date(b.date) - new Date(a.date));
+            if(userSessions.length === 0) {
+                list.innerHTML = "<p style='color:#666; padding:20px;'>Aucune séance trouvée.</p>";
+                return;
+            }
 
-                    // 1. MON HISTORIQUE (Filtré par Pseudo insensible à la casse)
-                    const myData = data.filter(r => r.pseudo.toLowerCase() === currentUser.toLowerCase());
-                    
-                    if(myData.length === 0) pList.innerHTML = "<p style='padding:10px'>Aucun historique trouvé pour " + currentUser + ".<br>Vérifie l'orthographe ou fais une première séance !</p>";
-                    else {
-                        pList.innerHTML = myData.map(r => {
-                            let d = new Date(r.date);
-                            return `
-                            <div class="list-item" style="border-left-color:${getColor(r.pct)}">
-                                <div class="item-left">
-                                    <span class="item-main">${d.getDate()}/${d.getMonth()+1} - ${d.getHours()}h${d.getMinutes()}</span>
-                                    <span class="item-sub">${r.reussis}/${r.total} tirs</span>
-                                </div>
-                                <span class="item-right" style="color:${getColor(r.pct)}">${r.pct}%</span>
-                            </div>`;
-                        }).join('');
-                    }
-
-                    // 2. CLASSEMENT (Meilleur % en premier)
-                    data.sort((a, b) => b.pct - a.pct);
-                    rList.innerHTML = data.map((r, index) => {
-                        let rank = index + 1;
-                        let medal = rank === 1 ? "🥇" : (rank === 2 ? "🥈" : (rank === 3 ? "🥉" : "#"+rank));
-                        let borderClass = rank === 1 ? "gold" : (rank === 2 ? "silver" : (rank === 3 ? "bronze" : ""));
-                        let d = new Date(r.date);
-
-                        return `
-                        <div class="list-item ${borderClass}">
-                            <div class="item-left" style="flex-direction:row; align-items:center;">
-                                <span style="font-size:1.5rem; width:40px;">${medal}</span>
-                                <div>
-                                    <span class="item-main">${r.pseudo}</span>
-                                    <div class="item-sub">${d.getDate()}/${d.getMonth()+1} • ${r.reussis}/${r.total}</div>
-                                </div>
-                            </div>
-                            <span class="item-right">${r.pct}%</span>
+            list.innerHTML = userSessions.map((s, idx) => {
+                let d = new Date(s.date);
+                let dateStr = `${d.getDate()}/${d.getMonth()+1} à ${d.getHours()}h${d.getMinutes()}`;
+                
+                // Génération de la grille visuelle (Tic/Croix)
+                let detailsHTML = "";
+                if(s.details && s.details.includes('|')) {
+                    // NOUVEAU FORMAT (V8)
+                    let seriesArr = s.details.split('|');
+                    detailsHTML = seriesArr.map((seq, i) => {
+                        let score = (seq.match(/1/g) || []).length;
+                        let grid = seq.split('').map(char => 
+                            `<div class="shot-mark ${char==='1'?'mark-yes':'mark-no'}">${char==='1'?'✔':'✖'}</div>`
+                        ).join('');
+                        
+                        return `<div class="detail-row">
+                            <div class="row-label">Série ${i+1}</div>
+                            <div class="row-grid">${grid}</div>
+                            <div class="row-total">${score}/10</div>
                         </div>`;
                     }).join('');
+                } else {
+                    // ANCIEN FORMAT (Texte simple)
+                    detailsHTML = `<p style="font-size:0.8rem; color:#888; text-align:center;">${s.details || "Pas de détails visuels (Ancienne version)"}</p>`;
+                }
 
-                })
-                .catch(e => {
-                    console.error(e);
-                    // Si erreur, c'est souvent que le script n'est pas à jour
-                    document.getElementById('history-list').innerHTML = "<p style='color:red'>Erreur : Impossible de lire l'historique.<br>As-tu bien fait 'Déployer > Nouvelle Version' sur Google Script ?</p>";
-                });
+                return `
+                <div class="list-item">
+                    <div class="item-header" onclick="toggleDetails(${idx})">
+                        <div class="user-info" style="padding:0;">
+                            <span class="user-name">${dateStr}</span>
+                            <span class="user-meta">${s.reussis}/${s.total} Tirs</span>
+                        </div>
+                        <div class="score-badge" style="color:${getColor(s.pct)}">${s.pct}%</div>
+                    </div>
+                    <div class="session-details" id="details-${idx}">
+                        ${detailsHTML}
+                    </div>
+                </div>`;
+            }).join('');
         }
 
-        function getColor(pct) {
-            if(pct >= 70) return '#00b894';
-            if(pct >= 50) return '#fdcb6e';
-            return '#d63031';
+        function toggleDetails(idx) {
+            let el = document.getElementById(`details-${idx}`);
+            el.style.display = el.style.display === 'block' ? 'none' : 'block';
         }
 
-        // --- VOICE RECOGNITION ---
-        let recognition;
-        let isListening = false;
+        // --- CLASSEMENT INTELLIGENT ---
+        function setRankMode(mode, btn) {
+            rankMode = mode;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderLeaderboard();
+        }
+
+        function renderLeaderboard() {
+            const list = document.getElementById('leaderboard-list');
+            
+            // 1. Grouper par utilisateur
+            let usersMap = {};
+            
+            allData.forEach(s => {
+                let p = s.pseudo;
+                if(!usersMap[p]) usersMap[p] = { pseudo: p, bestSession: 0, bestSerie: 0, lastDate: s.date };
+                
+                // Calcul Record Session (%)
+                if(s.pct > usersMap[p].bestSession) usersMap[p].bestSession = s.pct;
+                
+                // Calcul Record Série Unitaire (/10)
+                // On doit analyser le string details
+                if(s.details && s.details.includes('|')) {
+                    let series = s.details.split('|');
+                    series.forEach(seq => {
+                        let score = (seq.match(/1/g) || []).length;
+                        if(score > usersMap[p].bestSerie) usersMap[p].bestSerie = score;
+                    });
+                } else if (s.details && !s.details.includes('|')) {
+                     // Essai de parsing ancien format "S1:8" si possible, sinon ignore
+                }
+            });
+
+            // 2. Convertir en tableau
+            let ranking = Object.values(usersMap);
+
+            // 3. Trier selon le mode choisi
+            if(rankMode === 'session') {
+                ranking.sort((a, b) => b.bestSession - a.bestSession);
+            } else {
+                ranking.sort((a, b) => b.bestSerie - a.bestSerie);
+            }
+
+            // 4. Afficher
+            list.innerHTML = ranking.map((u, idx) => {
+                let rank = idx + 1;
+                let medal = rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":`#${rank}`;
+                let scoreDisplay = rankMode === 'session' ? u.bestSession + "%" : u.bestSerie + "/10";
+                let label = rankMode === 'session' ? "Meilleure Séance" : "Meilleure Série";
+
+                return `
+                <div class="list-item">
+                    <div class="item-header" onclick="viewUserProfile('${u.pseudo}')">
+                        <div class="rank-badge">${medal}</div>
+                        <div class="user-info">
+                            <span class="user-name">${u.pseudo}</span>
+                            <span class="user-meta">${label}</span>
+                        </div>
+                        <div class="score-badge">${scoreDisplay}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // --- NAVIGATION ---
+        function switchTab(tab, el) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('page-' + tab).classList.add('active');
+            if(el) el.classList.add('active');
+            
+            if(tab === 'rank') loadDataFromCloud();
+        }
+
+        function showMyProfile(el) {
+            document.getElementById('profile-title').innerText = "Mon Historique";
+            document.getElementById('back-btn').style.display = 'none';
+            renderHistory(currentUser);
+            switchTab('profile', el);
+        }
+
+        function viewUserProfile(targetPseudo) {
+            document.getElementById('profile-title').innerText = "Historique de " + targetPseudo;
+            document.getElementById('back-btn').style.display = 'inline-block';
+            renderHistory(targetPseudo);
+            switchTab('profile', null); // On va sur l'onglet sans activer l'icône du bas
+        }
+
+        function backToLeaderboard() {
+            switchTab('rank', document.querySelectorAll('.nav-item')[2]);
+        }
+
+        function getColor(pct) { return pct >= 70 ? '#00b894' : pct >= 50 ? '#e17055' : '#d63031'; }
+
+        // --- VOCAL ---
+        let recognition; let isListening = false;
         function toggleVoice() {
             if (!('webkitSpeechRecognition' in window)) return alert("Vocal non supporté");
-            if (isListening) { 
-                recognition.stop(); isListening = false; 
-                document.getElementById('voiceBtn').classList.remove('listening');
-                document.getElementById('voiceBtn').innerText = "🎙️ MICRO : OFF";
+            const btn = document.getElementById('voiceBtn');
+            const txt = document.getElementById('voiceTxt');
+            
+            if(isListening) { 
+                recognition.stop(); isListening=false; 
+                btn.classList.remove('listening'); txt.innerText="MICRO OFF";
             } else {
                 recognition = new webkitSpeechRecognition();
-                recognition.lang = 'fr-FR';
-                recognition.continuous = false;
-                recognition.onstart = () => { isListening=true; document.getElementById('voiceBtn').classList.add('listening'); document.getElementById('voiceBtn').innerText="🛑 STOP"; };
-                recognition.onend = () => { if(isListening && currentSeries <= maxSeries) recognition.start(); else { isListening=false; document.getElementById('voiceBtn').classList.remove('listening'); document.getElementById('voiceBtn').innerText="🎙️ MICRO : OFF"; }};
+                recognition.lang = 'fr-FR'; recognition.continuous = false;
+                recognition.onstart = () => { isListening=true; btn.classList.add('listening'); txt.innerText="JE T'ÉCOUTE..."; };
+                recognition.onend = () => { if(isListening && currentSeries<=maxSeries) recognition.start(); else { isListening=false; btn.classList.remove('listening'); txt.innerText="MICRO OFF"; }};
                 recognition.onresult = (e) => {
-                    const txt = e.results[0][0].transcript.toLowerCase();
-                    document.getElementById('voiceStatus').innerText = "Entendu : " + txt;
-                    if (txt.match(/oui|ok|yes|marqué/)) processInput(true);
-                    else if (txt.match(/non|no|raté|zut/)) processInput(false);
+                    let t = e.results[0][0].transcript.toLowerCase();
+                    if(t.match(/oui|ok|yes|marqué/)) processInput(1);
+                    if(t.match(/non|raté|no|zut/)) processInput(0);
                 };
                 recognition.start();
             }
