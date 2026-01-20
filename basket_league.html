@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Basket Team Tracker</title>
+    <title>Basket Team Tracker V7</title>
     <style>
-        /* DESIGN MODERNE & SOMBRE */
         :root { --primary: #0984e3; --success: #00b894; --danger: #d63031; --bg: #1a1a1a; --card: #2d3436; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center; background-color: var(--bg); color: white; margin: 0; padding: 0; padding-bottom: 80px; user-select: none; -webkit-tap-highlight-color: transparent; }
         
@@ -40,19 +39,21 @@
         .miss { background: linear-gradient(145deg, #e17055, #d63031); }
         .make { background: linear-gradient(145deg, #00b894, #00cec9); }
 
-        /* HISTORIQUE & CLASSEMENT */
+        /* LISTES */
         .list-item { background: var(--card); margin-bottom: 12px; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #444; text-align: left; }
         .item-left { display: flex; flex-direction: column; }
         .item-main { font-weight: bold; font-size: 1.1rem; }
         .item-sub { font-size: 0.8rem; color: #888; margin-top: 4px; }
         .item-right { font-size: 1.4rem; font-weight: bold; color: var(--success); }
         
-        .gold { border-left-color: #f1c40f; } 
-        .silver { border-left-color: #bdc3c7; } 
-        .bronze { border-left-color: #e67e22; }
+        .gold { border-left-color: #f1c40f; } .silver { border-left-color: #bdc3c7; } .bronze { border-left-color: #e67e22; }
 
         #voiceBtn { width: 100%; padding: 20px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; margin-bottom: 15px; }
         #voiceBtn.listening { background: #e17055; animation: pulse 1.5s infinite; }
+
+        /* HEADER USER */
+        .user-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background: #222; padding: 10px; border-radius: 8px; }
+        .logout-btn { background: none; border: 1px solid #444; color: #aaa; padding: 5px 10px; border-radius: 5px; font-size: 0.7rem; cursor: pointer; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
@@ -63,16 +64,21 @@
     <div id="login-screen">
         <div class="login-box">
             <h1 style="margin-bottom: 30px;">🏀 TEAM TRACKER</h1>
-            <p style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Choisis ton nom de joueur</p>
-            <input type="text" id="pseudo-input" placeholder="Ton blase (ex: TP9)">
-            <button class="main-btn btn-start" onclick="login()">ENTRER SUR LE TERRAIN</button>
+            <p style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">
+                Entrez exactement le même pseudo<br>pour retrouver votre historique.
+            </p>
+            <input type="text" id="pseudo-input" placeholder="Pseudo (ex: Jordan23)">
+            <button class="main-btn btn-start" onclick="login()">CONNEXION</button>
         </div>
     </div>
 
     <div id="page-shoot" class="page active">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h2 style="margin:0;">🔥 Séance en cours</h2>
-            <small id="user-display" style="color:var(--primary); font-weight:bold;"></small>
+        <div class="user-header">
+            <div>
+                <span style="color:#888; font-size:0.8rem;">Joueur :</span>
+                <strong id="user-display" style="color:var(--primary); margin-left:5px;">...</strong>
+            </div>
+            <button class="logout-btn" onclick="logout()">Déconnexion</button>
         </div>
 
         <div class="stats-grid">
@@ -89,18 +95,17 @@
             <button class="btn-action make" onclick="processInput(true)">✅</button>
         </div>
 
-        <button class="main-btn" style="background:#6c5ce7; margin-top:10px;" onclick="finishSession()">💾 TERMINER & ENVOYER</button>
+        <button class="main-btn" style="background:#6c5ce7; margin-top:10px;" onclick="finishSession()">💾 SAUVEGARDER</button>
     </div>
 
     <div id="page-profile" class="page">
         <h2>📅 Mon Historique</h2>
-        <button onclick="fetchData()" style="background:none; border:none; color:var(--primary); cursor:pointer; margin-bottom:15px;">🔄 Actualiser</button>
+        <p style="font-size:0.8rem; color:#aaa; margin-bottom: 15px;">Chargement automatique des données...</p>
         <div id="history-list">Chargement...</div>
     </div>
 
     <div id="page-rank" class="page">
         <h2>🏆 Classement Team</h2>
-        <p style="font-size:0.8rem; color:#aaa;">Basé sur le meilleur % de réussite</p>
         <button onclick="fetchData()" style="background:none; border:none; color:var(--primary); cursor:pointer; margin-bottom:15px;">🔄 Actualiser</button>
         <div id="leaderboard-list">Chargement...</div>
     </div>
@@ -108,13 +113,12 @@
     <div class="navbar">
         <div class="nav-item active" onclick="switchTab('shoot', this)"><span>🏀</span>Shoot</div>
         <div class="nav-item" onclick="switchTab('profile', this)"><span>👤</span>Moi</div>
-        <div class="nav-item" onclick="switchTab('rank', this)"><span>🏆</span>Classement</div>
+        <div class="nav-item" onclick="switchTab('rank', this)"><span>🏆</span>Top</div>
     </div>
 
     <script>
         // =========================================================
-        // ⚠️ ZONE A MODIFIER PAR L'ADMINISTRATEUR (TOI) ⚠️
-        // Colle ton lien Google Script (celui qui finit par /exec) ici entre les guillemets :
+        // ⚠️ REMPLACE TON LIEN ICI ⚠️
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxN68AC3tCN4caxHOUSfIJtOXTVDROLQ98d2PYEo6sN62qCGQP2-E3Ews931BPlfNx6tw/exec"; 
         // =========================================================
 
@@ -130,18 +134,32 @@
         const maxSeries = 10;
         const shotsPerSeries = 10;
 
-        // INIT
+        // --- INIT AU DEMARRAGE ---
+        // Si l'utilisateur est déjà enregistré, on saute le login
         if (currentUser) {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('user-display').innerText = currentUser;
-            if(GOOGLE_SCRIPT_URL.includes("TON_LIEN")) alert("⚠️ Attention Admin : Tu n'as pas configuré le lien Google Script dans le code !");
+            startApp(currentUser);
         }
 
         function login() {
             const val = document.getElementById('pseudo-input').value.trim();
             if (val) {
                 localStorage.setItem('basket_user', val);
-                currentUser = val;
+                startApp(val);
+            }
+        }
+
+        function startApp(pseudo) {
+            currentUser = pseudo;
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('user-display').innerText = currentUser;
+            
+            // On lance la récupération des données immédiatement pour "prouver" que le compte existe
+            fetchData(); 
+        }
+
+        function logout() {
+            if(confirm("Se déconnecter ?")) {
+                localStorage.removeItem('basket_user');
                 location.reload();
             }
         }
@@ -155,14 +173,13 @@
             if (tabId === 'profile' || tabId === 'rank') fetchData();
         }
 
-        // --- GAMEPLAY ---
+        // --- AUDIO & GAMEPLAY ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(isMake) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain); gain.connect(audioCtx.destination);
-            
             if (isMake) {
                 osc.frequency.setValueAtTime(880, audioCtx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.1);
@@ -171,7 +188,6 @@
                 osc.frequency.setValueAtTime(150, audioCtx.currentTime);
                 osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.2);
             }
-            
             gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
             gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2);
             osc.start(); osc.stop(audioCtx.currentTime + 0.2);
@@ -179,13 +195,10 @@
 
         function processInput(isMake) {
             if (currentSeries > maxSeries) return alert("Séance terminée ! Clique sur Sauvegarder.");
-            
             playSound(isMake);
             shotsInSeries++; totalShots++;
             if (isMake) { makesInSeries++; totalMakes++; }
-            
             updateUI();
-
             if (shotsInSeries >= shotsPerSeries) {
                 detailsStr += `S${currentSeries}:${makesInSeries} `;
                 setTimeout(() => {
@@ -217,7 +230,6 @@
                 body: JSON.stringify(data)
             }).then(() => {
                 alert("Score envoyé !");
-                // Reset
                 currentSeries = 1; shotsInSeries = 0; makesInSeries = 0; totalMakes = 0; totalShots = 0; detailsStr="";
                 updateUI();
                 switchTab('rank', document.querySelectorAll('.nav-item')[2]);
@@ -231,17 +243,20 @@
             fetch(GOOGLE_SCRIPT_URL)
                 .then(res => res.json())
                 .then(data => {
-                    // 1. FILTER FOR PROFILE
-                    const myData = data.filter(r => r.pseudo.toLowerCase() === currentUser.toLowerCase()).reverse(); // Plus récent en haut
+                    // TRI PAR DATE (Récent en premier)
+                    data.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                    // 1. MON HISTORIQUE (Filtré par Pseudo insensible à la casse)
+                    const myData = data.filter(r => r.pseudo.toLowerCase() === currentUser.toLowerCase());
                     
-                    if(myData.length === 0) pList.innerHTML = "<p>Aucune séance pour l'instant.</p>";
+                    if(myData.length === 0) pList.innerHTML = "<p style='padding:10px'>Aucun historique trouvé pour " + currentUser + ".<br>Vérifie l'orthographe ou fais une première séance !</p>";
                     else {
                         pList.innerHTML = myData.map(r => {
                             let d = new Date(r.date);
                             return `
                             <div class="list-item" style="border-left-color:${getColor(r.pct)}">
                                 <div class="item-left">
-                                    <span class="item-main">${d.getDate()}/${d.getMonth()+1}</span>
+                                    <span class="item-main">${d.getDate()}/${d.getMonth()+1} - ${d.getHours()}h${d.getMinutes()}</span>
                                     <span class="item-sub">${r.reussis}/${r.total} tirs</span>
                                 </div>
                                 <span class="item-right" style="color:${getColor(r.pct)}">${r.pct}%</span>
@@ -249,18 +264,12 @@
                         }).join('');
                     }
 
-                    // 2. LEADERBOARD (Top Scores)
-                    // On trie par pourcentage décroissant
+                    // 2. CLASSEMENT (Meilleur % en premier)
                     data.sort((a, b) => b.pct - a.pct);
                     rList.innerHTML = data.map((r, index) => {
                         let rank = index + 1;
-                        let medal = "";
-                        let borderClass = "";
-                        if(rank===1) { medal="🥇"; borderClass="gold"; }
-                        else if(rank===2) { medal="🥈"; borderClass="silver"; }
-                        else if(rank===3) { medal="🥉"; borderClass="bronze"; }
-                        else medal = "#"+rank;
-
+                        let medal = rank === 1 ? "🥇" : (rank === 2 ? "🥈" : (rank === 3 ? "🥉" : "#"+rank));
+                        let borderClass = rank === 1 ? "gold" : (rank === 2 ? "silver" : (rank === 3 ? "bronze" : ""));
                         let d = new Date(r.date);
 
                         return `
@@ -279,55 +288,38 @@
                 })
                 .catch(e => {
                     console.error(e);
-                    document.getElementById('history-list').innerText = "Erreur de chargement...";
+                    // Si erreur, c'est souvent que le script n'est pas à jour
+                    document.getElementById('history-list').innerHTML = "<p style='color:red'>Erreur : Impossible de lire l'historique.<br>As-tu bien fait 'Déployer > Nouvelle Version' sur Google Script ?</p>";
                 });
         }
 
         function getColor(pct) {
-            if(pct >= 70) return '#00b894'; // Vert
-            if(pct >= 50) return '#fdcb6e'; // Orange
-            return '#d63031'; // Rouge
+            if(pct >= 70) return '#00b894';
+            if(pct >= 50) return '#fdcb6e';
+            return '#d63031';
         }
 
         // --- VOICE RECOGNITION ---
         let recognition;
         let isListening = false;
         function toggleVoice() {
-            if (!('webkitSpeechRecognition' in window)) return alert("Vocal non supporté sur ce navigateur");
-            
+            if (!('webkitSpeechRecognition' in window)) return alert("Vocal non supporté");
             if (isListening) { 
-                recognition.stop(); 
-                isListening = false; 
+                recognition.stop(); isListening = false; 
                 document.getElementById('voiceBtn').classList.remove('listening');
                 document.getElementById('voiceBtn').innerText = "🎙️ MICRO : OFF";
             } else {
                 recognition = new webkitSpeechRecognition();
                 recognition.lang = 'fr-FR';
                 recognition.continuous = false;
-                recognition.interimResults = false;
-
-                recognition.onstart = () => { 
-                    isListening = true; 
-                    document.getElementById('voiceBtn').classList.add('listening');
-                    document.getElementById('voiceBtn').innerText = "🛑 STOP (Je t'écoute)";
-                };
-                
-                recognition.onend = () => { 
-                    if(isListening && currentSeries <= maxSeries) recognition.start(); // Auto-restart
-                    else {
-                         isListening = false;
-                         document.getElementById('voiceBtn').classList.remove('listening');
-                         document.getElementById('voiceBtn').innerText = "🎙️ MICRO : OFF";
-                    }
-                };
-
-                recognition.onresult = (event) => {
-                    const txt = event.results[0][0].transcript.toLowerCase();
+                recognition.onstart = () => { isListening=true; document.getElementById('voiceBtn').classList.add('listening'); document.getElementById('voiceBtn').innerText="🛑 STOP"; };
+                recognition.onend = () => { if(isListening && currentSeries <= maxSeries) recognition.start(); else { isListening=false; document.getElementById('voiceBtn').classList.remove('listening'); document.getElementById('voiceBtn').innerText="🎙️ MICRO : OFF"; }};
+                recognition.onresult = (e) => {
+                    const txt = e.results[0][0].transcript.toLowerCase();
                     document.getElementById('voiceStatus').innerText = "Entendu : " + txt;
-                    if (txt.match(/oui|ok|yes|marqué|dedans/)) processInput(true);
-                    else if (txt.match(/non|no|raté|zut|pas/)) processInput(false);
+                    if (txt.match(/oui|ok|yes|marqué/)) processInput(true);
+                    else if (txt.match(/non|no|raté|zut/)) processInput(false);
                 };
-
                 recognition.start();
             }
         }
