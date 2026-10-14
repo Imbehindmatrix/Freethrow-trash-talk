@@ -3,7 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Basket Pro - V2.0 (Classement & Historique)</title>
+    <title>Basket Pro - V3.0 (Édition Vocale)</title>
+
+    <!-- ==========================================
+         CHARGEMENT DES LIBRAIRIES IA (ISOLÉES)
+         ========================================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands@0.4.0/dist/speech-commands.min.js"></script>
+    <!-- Fichier Edge Impulse (Sera détecté automatiquement quand tu l'ajouteras sur GitHub) -->
+    <script src="edge-impulse-standalone.js" onerror="console.log('Info: Fichier Edge Impulse non encore présent sur GitHub.')"></script>
+
     <style>
         /* ==========================================
            BRIQUE 1 : LE DESIGN (CSS)
@@ -27,9 +36,9 @@
         input:focus { border-color: var(--primary); }
         
         /* Cartes de Statistiques */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .stat-card { background: var(--card); padding: 15px 5px; border-radius: 12px; border: 1px solid #333; }
-        .stat-val { font-size: 1.8rem; font-weight: bold; display: block; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-card { background: var(--card); padding: 12px 5px; border-radius: 12px; border: 1px solid #333; }
+        .stat-val { font-size: 1.7rem; font-weight: bold; display: block; }
         .stat-lbl { font-size: 0.7rem; color: #aaa; text-transform: uppercase; }
 
         /* Boutons et Zones Tactiles Géantes */
@@ -37,7 +46,7 @@
         .btn:active { transform: scale(0.96); }
         .btn-main { width: 100%; padding: 15px; background: var(--primary); font-size: 1rem; margin-top: 10px; }
 
-        .touch-zone-container { display: flex; height: 45vh; width: 100%; gap: 10px; margin-bottom: 15px; }
+        .touch-zone-container { display: flex; height: 38vh; width: 100%; gap: 10px; margin-bottom: 15px; }
         .touch-zone { flex: 1; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 3rem; font-weight: bold; opacity: 0.85; transition: opacity 0.1s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; }
         .touch-zone:active { opacity: 1; transform: scale(0.97); }
         .zone-miss { background: linear-gradient(145deg, #e17055, #d63031); border: 2px solid #fab1a0; }
@@ -64,7 +73,6 @@
         .user-meta { font-size: 0.75rem; color: #aaa; margin-top: 2px; display: block; }
         .score-badge { font-size: 1.4rem; font-weight: 800; color: var(--success); }
 
-        /* Grille de détails visuels (Cases Vertes / Rouges) */
         .session-details { background: #1e2224; padding: 12px; display: none; border-top: 1px solid #3d4648; }
         .detail-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem; }
         .detail-row:last-child { margin-bottom: 0; }
@@ -75,7 +83,17 @@
         .mark-no { background: rgba(255, 71, 87, 0.15); color: var(--danger); border: 1px solid var(--danger); }
         .row-total { width: 45px; text-align: right; font-weight: bold; color: #dfe6e9; }
 
+        /* --- BRIQUE CSS V3.0 : PANNEAU DE CONTRÔLE VOCAL --- */
+        .voice-panel { background: #222; border: 1px solid #333; border-radius: 12px; padding: 12px; margin-bottom: 15px; }
+        .voice-row { display: flex; gap: 8px; align-items: center; }
+        .voice-select { flex: 1; padding: 12px 8px; border-radius: 8px; background: #333; color: white; border: 1px solid #444; font-size: 0.82rem; font-weight: bold; outline: none; }
+        #voice-btn { flex: 1.2; padding: 12px; background: var(--card); color: white; border: 1px solid #555; border-radius: 8px; font-weight: bold; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: 0.2s; }
+        #voice-btn.listening { background: #e17055; border-color: #fab1a0; animation: pulse 1.5s infinite; }
+        #voice-btn.loading { background: #636e72; cursor: wait; }
+        .voice-feedback { font-size: 0.75rem; color: #888; margin-top: 8px; min-height: 16px; }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.02); opacity: 0.85; } 100% { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -87,14 +105,14 @@
     <!-- Écran de Connexion -->
     <div id="login-screen">
         <h1 style="color: var(--primary);">🏀 BASKET PRO</h1>
-        <p style="color:#888; font-size:0.9rem; margin-bottom: 25px;">Version 2.0 : Ligue & Stats</p>
+        <p style="color:#888; font-size:0.9rem; margin-bottom: 25px;">Version 3.0 : Édition Vocale & Ligue</p>
         <input type="text" id="pseudo-input" placeholder="Ton Pseudo (ex: Curry)">
         <button class="btn btn-main" style="width: 70%; max-width: 300px;" onclick="Auth.login()">COMMENCER</button>
     </div>
 
     <!-- Page 1 : LE JEU (Terrain) -->
     <div id="page-shoot" class="page active">
-        <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items: center; background: #222; padding: 10px 15px; border-radius: 10px; border: 1px solid #333;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items: center; background: #222; padding: 10px 15px; border-radius: 10px; border: 1px solid #333;">
             <span style="font-size: 0.9rem; color: #aaa;">Joueur : <strong id="user-display" style="color:white; font-size: 1.1rem;">...</strong></span>
             <span onclick="Auth.logout()" style="font-size:0.75rem; color:#ff7675; cursor:pointer; padding: 5px 10px; border: 1px solid #ff7675; border-radius: 6px;">Changer</span>
         </div>
@@ -103,6 +121,23 @@
             <div class="stat-card"><span class="stat-val" id="disp-series">1</span><span class="stat-lbl">Série / 10</span></div>
             <div class="stat-card"><span class="stat-val" id="disp-shots" style="color: var(--primary);">0</span><span class="stat-lbl">Tirs / 10</span></div>
             <div class="stat-card"><span class="stat-val" id="disp-total">0%</span><span class="stat-lbl">Global</span></div>
+        </div>
+
+        <!-- Panneau de Contrôle Vocal (V3.0) -->
+        <div class="voice-panel">
+            <div class="voice-row">
+                <select id="voice-mode-select" class="voice-select" onchange="VoiceEngine.changeMode(this.value)">
+                    <option value="native-fr">🇫🇷 Vocal Standard (Android/PC)</option>
+                    <option value="tf-en">🍎 IA Secours iOS (YES / NO)</option>
+                    <option value="edge-fr">🧠 Mon IA Française (Edge Impulse)</option>
+                </select>
+                <button id="voice-btn" onclick="VoiceEngine.toggle()">
+                    <span>🎙️</span> <span id="voice-btn-txt">MICRO OFF</span>
+                </button>
+            </div>
+            <div id="voice-feedback" class="voice-feedback">
+                Dis <strong>"Oui / Marqué"</strong> (✅) ou <strong>"Non / Raté"</strong> (❌)
+            </div>
         </div>
 
         <!-- Zones Tactiles Géantes -->
@@ -161,24 +196,68 @@
     <script>
         // --- 1. CONFIGURATION ---
         const CONFIG = {
-            SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxQ3OGPIyRNdyPpIn8mmxxQASFgXs7miWqep7RsyPeW7a-unfgTbxlgbArXH8GTYKGNeg/exec", // Vérifie que c'est bien ton dernier lien /exec
+            SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxQ3OGPIyRNdyPpIn8mmxxQASFgXs7miWqep7RsyPeW7a-unfgTbxlgbArXH8GTYKGNeg/exec",
             MAX_SERIES: 10,
-            SHOTS_PER_SERIES: 10
+            SHOTS_PER_SERIES: 10,
+            VOICE_COOLDOWN_MS: 1200, // Anti-écho : 1.2s minimum entre deux tirs vocaux
+            AI_THRESHOLD: 0.82       // Certitude minimale de l'IA (82%)
         };
 
-        // --- 2. AUTHENTIFICATION ---
+        // --- 2. MOTEUR SONORE (BIPS DE CONFIRMATION) ---
+        const SoundEngine = {
+            ctx: null,
+            init: function() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            },
+            play: function(result) {
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    if (result === 1) {
+                        // Son Aigu (Marqué ✅)
+                        osc.frequency.setValueAtTime(880, this.ctx.currentTime);
+                        osc.frequency.exponentialRampToValueAtTime(1760, this.ctx.currentTime + 0.12);
+                    } else {
+                        // Son Grave (Raté ❌)
+                        osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+                        osc.frequency.linearRampToValueAtTime(110, this.ctx.currentTime + 0.2);
+                    }
+
+                    gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.2);
+                } catch (e) {
+                    console.log("Audio non disponible:", e);
+                }
+            }
+        };
+
+        // --- 3. AUTHENTIFICATION ---
         const Auth = {
             user: localStorage.getItem('basket_user_v1'),
             init: function() {
                 if (this.user) {
                     document.getElementById('login-screen').style.display = 'none';
                     document.getElementById('user-display').innerText = this.user;
-                    API.fetchData(); // Précharge les données en arrière-plan
+                    API.fetchData();
+                    VoiceEngine.autoSelectBestMode();
                 }
             },
             login: function() {
                 const val = document.getElementById('pseudo-input').value.trim();
                 if (val) { 
+                    SoundEngine.init(); // Débloque le son sur iOS
                     this.user = val; 
                     localStorage.setItem('basket_user_v1', val); 
                     this.init(); 
@@ -192,12 +271,12 @@
             }
         };
 
-        // --- 3. LOGIQUE DE JEU (LE CERVEAU) ---
+        // --- 4. LOGIQUE DE JEU (LE CERVEAU) ---
         const Game = {
             state: {
                 currentSeries: 1,
-                shotsHistory: [], // Tirs de la série en cours (ex: [1, 0, 1])
-                sessionData: [],  // Séries terminées (ex: ["1010101010", "1110001110"])
+                shotsHistory: [],
+                sessionData: [],
                 totalMakes: 0,
                 totalShots: 0
             },
@@ -208,13 +287,14 @@
                     return;
                 }
                 
+                SoundEngine.play(result);
+
                 this.state.shotsHistory.push(result);
                 this.state.totalShots++;
                 if (result === 1) this.state.totalMakes++;
                 
                 UI.updateGameDisplay();
 
-                // Si la série de 10 est terminée
                 if (this.state.shotsHistory.length >= CONFIG.SHOTS_PER_SERIES) {
                     this.state.sessionData.push(this.state.shotsHistory.join(''));
                     
@@ -224,6 +304,7 @@
                         UI.updateGameDisplay();
                         
                         if (this.state.currentSeries > CONFIG.MAX_SERIES) {
+                            if (VoiceEngine.isListening) VoiceEngine.stop();
                             alert("Fin des 10 séries ! Sauvegarde ta séance.");
                         }
                     }, 300);
@@ -236,9 +317,9 @@
             }
         };
 
-        // --- 4. CONNEXION GOOGLE SCRIPT (LE FACTEUR) ---
+        // --- 5. CONNEXION GOOGLE SCRIPT (LE FACTEUR) ---
         const API = {
-            allData: [], // Stocke toutes les séances récupérées du Google Sheet
+            allData: [],
 
             saveSession: function() {
                 if (Game.state.totalShots === 0) {
@@ -247,9 +328,9 @@
                 }
                 if (!confirm("Sauvegarder et envoyer cette séance vers le classement ?")) return;
                 
+                if (VoiceEngine.isListening) VoiceEngine.stop();
                 UI.showStatus("Sauvegarde en cours...", "loading");
 
-                // Sécurité : Si une série est en cours (ex: 4 tirs faits), on l'inclut quand même dans les détails
                 let finalSeriesList = [...Game.state.sessionData];
                 if (Game.state.shotsHistory.length > 0) {
                     finalSeriesList.push(Game.state.shotsHistory.join(''));
@@ -277,7 +358,6 @@
                     setTimeout(() => { 
                         Game.reset(); 
                         UI.hideStatus();
-                        // Redirige automatiquement vers "Mon Profil" pour voir sa séance
                         UI.showMyProfile(document.getElementById('nav-profile'));
                     }, 1200);
                 })
@@ -295,21 +375,20 @@
                         console.error("Erreur Script:", data.error);
                         return;
                     }
-                    // Tri du plus récent au plus ancien
                     this.allData = data.sort((a, b) => new Date(b.date) - new Date(a.date));
                     if (callback) callback(this.allData);
                 })
                 .catch(err => {
                     console.error("Erreur de lecture GET:", err);
-                    document.getElementById('leaderboard-list').innerHTML = "<p style='color:#ff6b6b;'>❌ Impossible de charger les données. Vérifie que le déploiement Google Script est sur 'Tout le monde'.</p>";
+                    document.getElementById('leaderboard-list').innerHTML = "<p style='color:#ff6b6b;'>❌ Impossible de charger les données.</p>";
                     document.getElementById('history-list').innerHTML = "<p style='color:#ff6b6b;'>❌ Impossible de charger l'historique.</p>";
                 });
             }
         };
 
-        // --- 5. INTERFACE & AFFICHAGE (LE PEINTRE) ---
+        // --- 6. INTERFACE & AFFICHAGE (LE PEINTRE) ---
         const UI = {
-            rankMode: 'session', // 'session' (%) ou 'serie' (/10)
+            rankMode: 'session',
 
             updateGameDisplay: function() {
                 let s = Game.state;
@@ -372,7 +451,6 @@
                 return pct >= 70 ? 'var(--success)' : pct >= 50 ? '#fdcb6e' : 'var(--danger)';
             },
 
-            // Dessine l'historique d'un joueur avec les cases vertes/rouges
             renderHistory: function(targetUser) {
                 const list = document.getElementById('history-list');
                 const userSessions = API.allData.filter(r => r.pseudo && r.pseudo.toString().toLowerCase() === targetUser.toLowerCase());
@@ -433,7 +511,6 @@
                 if (el) el.style.display = (el.style.display === 'block') ? 'none' : 'block';
             },
 
-            // Dessine le Hall of Fame
             renderLeaderboard: function() {
                 const list = document.getElementById('leaderboard-list');
                 if (API.allData.length === 0) {
@@ -458,7 +535,6 @@
                         usersMap[key].bestSession = pct;
                     }
                     
-                    // Calcul du record de série sur 10
                     if (s.details) {
                         let cleanDetails = s.details.toString().trim();
                         if (/^[01|]+$/.test(cleanDetails)) {
@@ -501,6 +577,290 @@
                 }).join('');
             }
         };
+
+        // --- 7. MODULE VOCAL ISOLÉ (V3.0 - MULTI-MOTEUR) ---
+        const VoiceEngine = {
+            mode: 'native-fr',
+            isListening: false,
+            lastShotTime: 0,
+            nativeRec: null,
+            tfRec: null,
+            edgeStream: null,
+            edgeContext: null,
+            edgeProcessor: null,
+
+            // Détecte automatiquement si l'appareil est un iPhone pour proposer le meilleur mode par défaut
+            autoSelectBestMode: function() {
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                const selectEl = document.getElementById('voice-mode-select');
+                if (typeof Module !== 'undefined') {
+                    // Si le fichier Edge Impulse est présent sur GitHub, on le sélectionne par défaut !
+                    selectEl.value = 'edge-fr';
+                    this.changeMode('edge-fr');
+                } else if (isIOS) {
+                    selectEl.value = 'tf-en';
+                    this.changeMode('tf-en');
+                }
+            },
+
+            changeMode: function(newMode) {
+                if (this.isListening) this.stop();
+                this.mode = newMode;
+                const fb = document.getElementById('voice-feedback');
+                if (newMode === 'native-fr') {
+                    fb.innerHTML = 'Dis <strong>"Oui / Marqué"</strong> (✅) ou <strong>"Non / Raté"</strong> (❌)';
+                } else if (newMode === 'tf-en') {
+                    fb.innerHTML = 'Spécial iPhone : Dis <strong>"YES"</strong> (✅) ou <strong>"NO"</strong> (❌)';
+                } else if (newMode === 'edge-fr') {
+                    fb.innerHTML = 'IA Perso FR : Dis <strong>"Marqué"</strong> (✅) ou <strong>"Raté"</strong> (❌)';
+                }
+            },
+
+            // Filtre Anti-Écho (empêche un même cri de compter 2 tirs)
+            triggerShotWithCooldown: function(result, wordLabel) {
+                const now = Date.now();
+                if (now - this.lastShotTime < CONFIG.VOICE_COOLDOWN_MS) return;
+                this.lastShotTime = now;
+
+                const fb = document.getElementById('voice-feedback');
+                fb.innerHTML = result === 1 
+                    ? `🎙️ Entendu : <strong style="color:var(--success)">"${wordLabel.toUpperCase()}" (Marqué ✅)</strong>`
+                    : `🎙️ Entendu : <strong style="color:var(--danger)">"${wordLabel.toUpperCase()}" (Raté ❌)</strong>`;
+
+                Game.recordShot(result);
+            },
+
+            toggle: function() {
+                SoundEngine.init();
+                if (this.isListening) {
+                    this.stop();
+                } else {
+                    this.start();
+                }
+            },
+
+            start: async function() {
+                const btn = document.getElementById('voice-btn');
+                const txt = document.getElementById('voice-btn-txt');
+
+                if (this.mode === 'native-fr') {
+                    this.startNativeFR(btn, txt);
+                } else if (this.mode === 'tf-en') {
+                    await this.startTensorFlowEN(btn, txt);
+                } else if (this.mode === 'edge-fr') {
+                    await this.startEdgeImpulseFR(btn, txt);
+                }
+            },
+
+            stop: async function() {
+                this.isListening = false;
+                const btn = document.getElementById('voice-btn');
+                const txt = document.getElementById('voice-btn-txt');
+                btn.classList.remove('listening', 'loading');
+                txt.innerText = "MICRO OFF";
+
+                if (this.nativeRec) {
+                    try { this.nativeRec.stop(); } catch(e) {}
+                }
+                if (this.tfRec && this.tfRec.isListening()) {
+                    try { await this.tfRec.stopListening(); } catch(e) {}
+                }
+                if (this.edgeProcessor) {
+                    try { this.edgeProcessor.disconnect(); } catch(e) {}
+                }
+                if (this.edgeStream) {
+                    this.edgeStream.getTracks().forEach(t => t.stop());
+                }
+            },
+
+            // MOTEUR 1 : Reconnaissance Vocale Native FR
+            startNativeFR: function(btn, txt) {
+                const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRec) {
+                    alert("Ce navigateur bloque le vocal standard. Choisis 'IA Secours iOS' ou 'Mon IA Française' dans le menu déroulant !");
+                    return;
+                }
+
+                if (!this.nativeRec) {
+                    this.nativeRec = new SpeechRec();
+                    this.nativeRec.lang = 'fr-FR';
+                    this.nativeRec.continuous = false;
+                    this.nativeRec.interimResults = false;
+
+                    this.nativeRec.onresult = (e) => {
+                        const transcript = e.results[0][0].transcript.toLowerCase().trim();
+                        if (/oui|marqu|dedans|panier|yes|ok|bon/.test(transcript)) {
+                            this.triggerShotWithCooldown(1, transcript);
+                        } else if (/non|rat|dehors|zut|no|faux/.test(transcript)) {
+                            this.triggerShotWithCooldown(0, transcript);
+                        } else {
+                            document.getElementById('voice-feedback').innerHTML = `🎙️ Ignoré : "${transcript}" (Dis Marqué ou Raté)`;
+                        }
+                    };
+
+                    this.nativeRec.onend = () => {
+                        if (this.isListening && this.mode === 'native-fr' && Game.state.currentSeries <= CONFIG.MAX_SERIES) {
+                            try { this.nativeRec.start(); } catch(e) {}
+                        }
+                    };
+
+                    this.nativeRec.onerror = (e) => {
+                        if (e.error === 'not-allowed') {
+                            alert("Accès micro refusé. Autorise le micro dans les réglages de ton navigateur.");
+                            this.stop();
+                        }
+                    };
+                }
+
+                this.isListening = true;
+                btn.classList.add('listening');
+                txt.innerText = "ÉCOUTE (FR)...";
+                try { this.nativeRec.start(); } catch(e) {}
+            },
+
+            // MOTEUR 2 : IA Universelle TensorFlow (Compatible iOS immédiatement)
+            startTensorFlowEN: async function(btn, txt) {
+                try {
+                    if (typeof speechCommands === 'undefined') {
+                        alert("La librairie TensorFlow n'a pas pu charger. Vérifie ta connexion internet.");
+                        return;
+                    }
+                    if (!this.tfRec) {
+                        btn.classList.add('loading');
+                        txt.innerText = "CHARGEMENT IA...";
+                        this.tfRec = speechCommands.create('BROWSER_FFT');
+                        await this.tfRec.ensureModelLoaded();
+                        btn.classList.remove('loading');
+                    }
+
+                    const labels = this.tfRec.wordLabels();
+                    this.isListening = true;
+                    btn.classList.add('listening');
+                    txt.innerText = "ÉCOUTE (YES/NO)";
+
+                    this.tfRec.listen(result => {
+                        const scores = Array.from(result.scores);
+                        const bestIdx = scores.indexOf(Math.max(...scores));
+                        const bestWord = labels[bestIdx];
+                        const prob = scores[bestIdx];
+
+                        if (prob >= CONFIG.AI_THRESHOLD) {
+                            if (bestWord === 'yes') this.triggerShotWithCooldown(1, 'YES');
+                            else if (bestWord === 'no') this.triggerShotWithCooldown(0, 'NO');
+                        }
+                    }, {
+                        includeSpectrogram: false,
+                        probabilityThreshold: 0.75,
+                        invokeCallbackOnNoiseAndUnknown: false,
+                        overlapFactor: 0.50
+                    });
+                } catch (err) {
+                    console.error(err);
+                    btn.classList.remove('loading');
+                    alert("Erreur micro iOS : Vérifie que tu as autorisé l'accès au micro dans Safari.");
+                    this.stop();
+                }
+            },
+
+            // MOTEUR 3 : IA Française Edge Impulse (WebAssembly)
+            startEdgeImpulseFR: async function(btn, txt) {
+                if (typeof Module === 'undefined') {
+                    alert("Le fichier 'edge-impulse-standalone.js' n'est pas encore sur ton GitHub !\n\nEn attendant qu'on l'exporte d'Edge Impulse (Étape 4B), utilise le mode 'IA Secours iOS (YES/NO)' ou 'Vocal Standard'.");
+                    return;
+                }
+
+                try {
+                    btn.classList.add('loading');
+                    txt.innerText = "INIT EDGE IA...";
+
+                    this.edgeStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    this.edgeContext = new AudioCtx({ sampleRate: 16000 });
+                    const source = this.edgeContext.createMediaStreamSource(this.edgeStream);
+                    this.edgeProcessor = this.edgeContext.createScriptProcessor(4096, 1, 1);
+
+                    let audioBuffer = [];
+                    const sampleLength = 16000; // 1 seconde d'audio à 16kHz
+
+                    this.edgeProcessor.onaudioprocess = (e) => {
+                        if (!this.isListening) return;
+                        const inputData = e.inputBuffer.getChannelData(0);
+                        for (let i = 0; i < inputData.length; i++) {
+                            audioBuffer.push(Math.round(inputData[i] * 32768));
+                        }
+
+                        if (audioBuffer.length >= sampleLength) {
+                            const slice = audioBuffer.slice(0, sampleLength);
+                            audioBuffer = audioBuffer.slice(sampleLength / 2); // Fenêtre glissante 50%
+
+                            try {
+                                const classifier = new EdgeImpulseClassifier();
+                                const res = classifier.classify(slice);
+                                if (res && res.results) {
+                                    res.results.forEach(r => {
+                                        const lbl = r.label.toLowerCase();
+                                        if (r.value >= CONFIG.AI_THRESHOLD) {
+                                            if (lbl.includes('marqu') || lbl.includes('oui')) {
+                                                this.triggerShotWithCooldown(1, r.label);
+                                            } else if (lbl.includes('rat') || lbl.includes('non')) {
+                                                this.triggerShotWithCooldown(0, r.label);
+                                            }
+                                        }
+                                    });
+                                }
+                            } catch (err) {
+                                console.error("Erreur classification Edge:", err);
+                            }
+                        }
+                    };
+
+                    source.connect(this.edgeProcessor);
+                    this.edgeProcessor.connect(this.edgeContext.destination);
+
+                    btn.classList.remove('loading');
+                    btn.classList.add('listening');
+                    txt.innerText = "ÉCOUTE (EDGE FR)";
+                    this.isListening = true;
+                } catch (err) {
+                    console.error(err);
+                    btn.classList.remove('loading');
+                    alert("Erreur accès microphone : " + err.message);
+                    this.stop();
+                }
+            }
+        };
+
+        // Helper pour initialiser le classifieur Edge Impulse quand le fichier .js est présent
+        class EdgeImpulseClassifier {
+            constructor() {
+                if (typeof Module !== 'undefined' && !this.initialized) {
+                    Module.init();
+                    this.initialized = true;
+                }
+            }
+            classify(rawData) {
+                const obj = this._arrayToHeap(rawData);
+                const ret = Module.run_classifier(obj.buffer.byteOffset, rawData.length, false);
+                Module._free(obj.ptr);
+                if (ret.result !== 0) throw new Error('Classification failed (' + ret.result + ')');
+                let jsResult = { results: [] };
+                for (let cx = 0; cx < ret.size(); cx++) {
+                    let c = ret.get(cx);
+                    jsResult.results.push({ label: c.label, value: c.value });
+                    c.delete();
+                }
+                ret.delete();
+                return jsResult;
+            }
+            _arrayToHeap(data) {
+                let typedArray = new Float32Array(data);
+                let numBytes = typedArray.length * typedArray.BYTES_PER_ELEMENT;
+                let ptr = Module._malloc(numBytes);
+                let heapBytes = new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes);
+                heapBytes.set(new Uint8Array(typedArray.buffer));
+                return { ptr: ptr, buffer: heapBytes };
+            }
+        }
 
         // Démarrage de l'application
         Auth.init();
