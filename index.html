@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Basket Pro - V1.0 (Moteur Tactile)</title>
+    <title>Basket Pro - V2.0 (Classement & Historique)</title>
     <style>
         /* ==========================================
            BRIQUE 1 : LE DESIGN (CSS)
@@ -12,10 +12,10 @@
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-align: center; background-color: var(--bg); color: var(--text); margin: 0; padding-bottom: 90px; user-select: none; -webkit-tap-highlight-color: transparent; }
         
         /* Navigation (Barre du bas) */
-        .navbar { position: fixed; bottom: 0; width: 100%; background: #222; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #333; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
-        .nav-item { color: #666; font-size: 0.8rem; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+        .navbar { position: fixed; bottom: 0; width: 100%; background: #222; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #333; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { color: #666; font-size: 0.75rem; display: flex; flex-direction: column; align-items: center; cursor: pointer; flex: 1; }
         .nav-item.active { color: var(--primary); transform: translateY(-2px); font-weight: bold; }
-        .nav-icon { font-size: 1.5rem; margin-bottom: 3px; }
+        .nav-icon { font-size: 1.4rem; margin-bottom: 3px; }
 
         /* Gestion des pages */
         .page { display: none; padding: 20px; max-width: 600px; margin: 0 auto; animation: fadeIn 0.3s; padding-bottom: 120px; }
@@ -23,7 +23,7 @@
 
         /* Écran de Connexion */
         #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        input { padding: 15px; font-size: 1.1rem; border-radius: 10px; border: 1px solid #444; background: #333; color: white; text-align: center; margin-bottom: 20px; width: 70%; outline: none; }
+        input { padding: 15px; font-size: 1.1rem; border-radius: 10px; border: 1px solid #444; background: #333; color: white; text-align: center; margin-bottom: 20px; width: 70%; max-width: 300px; outline: none; }
         input:focus { border-color: var(--primary); }
         
         /* Cartes de Statistiques */
@@ -38,17 +38,42 @@
         .btn-main { width: 100%; padding: 15px; background: var(--primary); font-size: 1rem; margin-top: 10px; }
 
         .touch-zone-container { display: flex; height: 45vh; width: 100%; gap: 10px; margin-bottom: 15px; }
-        .touch-zone { flex: 1; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 3rem; font-weight: bold; opacity: 0.85; transition: opacity 0.1s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .touch-zone { flex: 1; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 3rem; font-weight: bold; opacity: 0.85; transition: opacity 0.1s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; }
         .touch-zone:active { opacity: 1; transform: scale(0.97); }
         .zone-miss { background: linear-gradient(145deg, #e17055, #d63031); border: 2px solid #fab1a0; }
         .zone-make { background: linear-gradient(145deg, #00b894, #00cec9); border: 2px solid #55efc4; }
         .zone-label { font-size: 1.2rem; margin-top: 10px; text-transform: uppercase; }
 
-        /* Messages de Statut (Sauvegarde) */
+        /* Messages de Statut */
         #status-msg { padding: 12px; margin-bottom: 10px; border-radius: 8px; font-size: 0.9rem; display: none; font-weight: bold; }
         .error { background: rgba(255, 71, 87, 0.2); color: #ff6b6b; border: 1px solid #ff6b6b; }
         .loading { background: rgba(9, 132, 227, 0.2); color: #74b9ff; border: 1px solid #74b9ff; }
         .success { background: rgba(0, 184, 148, 0.2); color: #00b894; border: 1px solid #00b894; }
+
+        /* --- BRIQUE CSS V2.0 : CLASSEMENT & HISTORIQUE --- */
+        .tabs-control { display: flex; background: #222; border-radius: 10px; padding: 4px; margin-bottom: 20px; border: 1px solid #333; }
+        .tab-btn { flex: 1; padding: 10px; border: none; background: none; color: #888; border-radius: 8px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .tab-btn.active { background: var(--primary); color: white; }
+
+        .list-item { background: var(--card); margin-bottom: 12px; border-radius: 12px; overflow: hidden; border: 1px solid #333; border-left: 4px solid var(--primary); text-align: left; }
+        .item-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .item-header:active { background: rgba(255,255,255,0.03); }
+        .rank-badge { font-size: 1.3rem; width: 40px; text-align: center; font-weight: bold; }
+        .user-info { flex-grow: 1; padding-left: 10px; }
+        .user-name { font-weight: bold; font-size: 1.1rem; color: white; display: block; }
+        .user-meta { font-size: 0.75rem; color: #aaa; margin-top: 2px; display: block; }
+        .score-badge { font-size: 1.4rem; font-weight: 800; color: var(--success); }
+
+        /* Grille de détails visuels (Cases Vertes / Rouges) */
+        .session-details { background: #1e2224; padding: 12px; display: none; border-top: 1px solid #3d4648; }
+        .detail-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem; }
+        .detail-row:last-child { margin-bottom: 0; }
+        .row-label { width: 65px; color: #aaa; font-weight: bold; font-size: 0.8rem; }
+        .row-grid { flex: 1; display: flex; gap: 4px; justify-content: flex-start; flex-wrap: wrap; padding: 0 5px; }
+        .shot-mark { width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; }
+        .mark-yes { background: rgba(0, 184, 148, 0.2); color: var(--success); border: 1px solid var(--success); }
+        .mark-no { background: rgba(255, 71, 87, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+        .row-total { width: 45px; text-align: right; font-weight: bold; color: #dfe6e9; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -62,16 +87,16 @@
     <!-- Écran de Connexion -->
     <div id="login-screen">
         <h1 style="color: var(--primary);">🏀 BASKET PRO</h1>
-        <p style="color:#888; font-size:0.9rem; margin-bottom: 25px;">Étape 2 : Moteur Tactile V1.0</p>
+        <p style="color:#888; font-size:0.9rem; margin-bottom: 25px;">Version 2.0 : Ligue & Stats</p>
         <input type="text" id="pseudo-input" placeholder="Ton Pseudo (ex: Curry)">
-        <button class="btn btn-main" style="width: 70%;" onclick="Auth.login()">COMMENCER</button>
+        <button class="btn btn-main" style="width: 70%; max-width: 300px;" onclick="Auth.login()">COMMENCER</button>
     </div>
 
-    <!-- Page 1 : LE JEU (Tracker) -->
+    <!-- Page 1 : LE JEU (Terrain) -->
     <div id="page-shoot" class="page active">
-        <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items: center;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items: center; background: #222; padding: 10px 15px; border-radius: 10px; border: 1px solid #333;">
             <span style="font-size: 0.9rem; color: #aaa;">Joueur : <strong id="user-display" style="color:white; font-size: 1.1rem;">...</strong></span>
-            <span onclick="Auth.logout()" style="font-size:0.8rem; color:#ff7675; cursor:pointer; padding: 5px; border: 1px solid #ff7675; border-radius: 5px;">Déconnexion</span>
+            <span onclick="Auth.logout()" style="font-size:0.75rem; color:#ff7675; cursor:pointer; padding: 5px 10px; border: 1px solid #ff7675; border-radius: 6px;">Changer</span>
         </div>
 
         <div class="stats-grid">
@@ -94,21 +119,38 @@
         <button class="btn btn-main" onclick="API.saveSession()">💾 SAUVEGARDER LA SÉANCE</button>
     </div>
 
-    <!-- Page 2 : CLASSEMENT (En construction pour l'étape 3) -->
-    <div id="page-rank" class="page">
-        <h2>🏆 Historique & Classement</h2>
-        <div style="background: var(--card); padding: 30px; border-radius: 12px; margin-top: 20px; border: 1px dashed #666;">
-            <p style="font-size: 2rem; margin: 0;">🚧</p>
-            <p style="color: #aaa;">En construction.<br>Sera ajouté à l'Étape 3 !</p>
+    <!-- Page 2 : HISTORIQUE PERSONNEL / PROFIL JOUEUR -->
+    <div id="page-profile" class="page">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 id="profile-title" style="margin:0; font-size: 1.4rem;">Mon Historique</h2>
+            <button onclick="UI.backToLeaderboard()" id="back-btn" style="display:none; background:#333; color:white; border:1px solid #555; padding:8px 14px; border-radius:8px; cursor:pointer; font-weight:bold;">⬅ Retour</button>
         </div>
+        <div id="history-list">Chargement des séances...</div>
     </div>
 
-    <!-- Barre de Navigation -->
+    <!-- Page 3 : CLASSEMENT GLOBAL (Hall of Fame) -->
+    <div id="page-rank" class="page">
+        <h2 style="margin-top:0; margin-bottom:15px;">🏆 Hall of Fame</h2>
+        
+        <div class="tabs-control">
+            <button class="tab-btn active" onclick="UI.setRankMode('session', this)">Record Session (%)</button>
+            <button class="tab-btn" onclick="UI.setRankMode('serie', this)">Record Série (/10)</button>
+        </div>
+
+        <p style="font-size: 0.75rem; color: #888; margin-top: -10px; margin-bottom: 15px;">💡 Clique sur un joueur pour inspecter ses séances</p>
+
+        <div id="leaderboard-list">Chargement du classement...</div>
+    </div>
+
+    <!-- Barre de Navigation (3 onglets) -->
     <div class="navbar">
-        <div class="nav-item active" onclick="UI.switchTab('shoot', this)">
+        <div class="nav-item active" id="nav-shoot" onclick="UI.switchTab('shoot', this)">
             <span class="nav-icon">🏀</span><span>Terrain</span>
         </div>
-        <div class="nav-item" onclick="UI.switchTab('rank', this)">
+        <div class="nav-item" id="nav-profile" onclick="UI.showMyProfile(this)">
+            <span class="nav-icon">👤</span><span>Mon Profil</span>
+        </div>
+        <div class="nav-item" id="nav-rank" onclick="UI.switchTab('rank', this)">
             <span class="nav-icon">🏆</span><span>Classement</span>
         </div>
     </div>
@@ -119,7 +161,7 @@
     <script>
         // --- 1. CONFIGURATION ---
         const CONFIG = {
-            SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxQ3OGPIyRNdyPpIn8mmxxQASFgXs7miWqep7RsyPeW7a-unfgTbxlgbArXH8GTYKGNeg/exec", // <-- REMPLACE CELA PAR TON LIEN GOOGLE SCRIPT
+            SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxN68AC3tCN4caxHOUSfIJtOXTVDROLQ98d2PYEo6sN62qCGQP2-E3Ews931BPlfNx6tw/exec", // Vérifie que c'est bien ton dernier lien /exec
             MAX_SERIES: 10,
             SHOTS_PER_SERIES: 10
         };
@@ -131,6 +173,7 @@
                 if (this.user) {
                     document.getElementById('login-screen').style.display = 'none';
                     document.getElementById('user-display').innerText = this.user;
+                    API.fetchData(); // Précharge les données en arrière-plan
                 }
             },
             login: function() {
@@ -142,7 +185,7 @@
                 }
             },
             logout: function() {
-                if(confirm("Veux-tu te déconnecter ?")) { 
+                if(confirm("Veux-tu changer de joueur ?")) { 
                     localStorage.removeItem('basket_user_v1'); 
                     location.reload(); 
                 }
@@ -153,8 +196,8 @@
         const Game = {
             state: {
                 currentSeries: 1,
-                shotsHistory: [], // Tirs de la série en cours
-                sessionData: [],  // Historique complet (ex: ["101010", "111000"])
+                shotsHistory: [], // Tirs de la série en cours (ex: [1, 0, 1])
+                sessionData: [],  // Séries terminées (ex: ["1010101010", "1110001110"])
                 totalMakes: 0,
                 totalShots: 0
             },
@@ -165,7 +208,6 @@
                     return;
                 }
                 
-                // On enregistre le tir
                 this.state.shotsHistory.push(result);
                 this.state.totalShots++;
                 if (result === 1) this.state.totalMakes++;
@@ -174,18 +216,17 @@
 
                 // Si la série de 10 est terminée
                 if (this.state.shotsHistory.length >= CONFIG.SHOTS_PER_SERIES) {
-                    // On convertit la série en texte (ex: 1,0,1 -> "101")
                     this.state.sessionData.push(this.state.shotsHistory.join(''));
                     
                     setTimeout(() => {
-                        this.state.shotsHistory = []; // Reset pour la nouvelle série
+                        this.state.shotsHistory = [];
                         this.state.currentSeries++;
                         UI.updateGameDisplay();
                         
                         if (this.state.currentSeries > CONFIG.MAX_SERIES) {
-                            alert("Fin de séance ! Enregistre tes scores.");
+                            alert("Fin des 10 séries ! Sauvegarde ta séance.");
                         }
-                    }, 300); // Petit délai pour laisser l'utilisateur voir son 10ème tir
+                    }, 300);
                 }
             },
             
@@ -197,17 +238,24 @@
 
         // --- 4. CONNEXION GOOGLE SCRIPT (LE FACTEUR) ---
         const API = {
+            allData: [], // Stocke toutes les séances récupérées du Google Sheet
+
             saveSession: function() {
                 if (Game.state.totalShots === 0) {
                     alert("Tu n'as fait aucun tir !");
                     return;
                 }
-                if (!confirm("Veux-tu envoyer ces stats vers ton Google Sheet ?")) return;
+                if (!confirm("Sauvegarder et envoyer cette séance vers le classement ?")) return;
                 
                 UI.showStatus("Sauvegarde en cours...", "loading");
 
-                // Préparation du colis de données
-                let detailsStr = Game.state.sessionData.join('|'); // Ex: "1010101010|1111000011"
+                // Sécurité : Si une série est en cours (ex: 4 tirs faits), on l'inclut quand même dans les détails
+                let finalSeriesList = [...Game.state.sessionData];
+                if (Game.state.shotsHistory.length > 0) {
+                    finalSeriesList.push(Game.state.shotsHistory.join(''));
+                }
+
+                let detailsStr = finalSeriesList.join('|'); 
                 let pct = Math.round((Game.state.totalMakes / Game.state.totalShots) * 100);
 
                 const payload = { 
@@ -218,10 +266,9 @@
                     details: detailsStr 
                 };
 
-                // Envoi postal (POST)
                 fetch(CONFIG.SCRIPT_URL, {
                     method: 'POST', 
-                    mode: 'no-cors', // Sécurité Google
+                    mode: 'no-cors',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 })
@@ -229,18 +276,41 @@
                     UI.showStatus("✅ Séance sauvegardée avec succès !", "success");
                     setTimeout(() => { 
                         Game.reset(); 
-                        UI.hideStatus(); 
-                    }, 2500);
+                        UI.hideStatus();
+                        // Redirige automatiquement vers "Mon Profil" pour voir sa séance
+                        UI.showMyProfile(document.getElementById('nav-profile'));
+                    }, 1200);
                 })
                 .catch(err => {
                     console.error(err);
                     UI.showStatus("❌ Erreur réseau. Vérifie ta connexion.", "error");
                 });
+            },
+
+            fetchData: function(callback) {
+                fetch(CONFIG.SCRIPT_URL)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error("Erreur Script:", data.error);
+                        return;
+                    }
+                    // Tri du plus récent au plus ancien
+                    this.allData = data.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    if (callback) callback(this.allData);
+                })
+                .catch(err => {
+                    console.error("Erreur de lecture GET:", err);
+                    document.getElementById('leaderboard-list').innerHTML = "<p style='color:#ff6b6b;'>❌ Impossible de charger les données. Vérifie que le déploiement Google Script est sur 'Tout le monde'.</p>";
+                    document.getElementById('history-list').innerHTML = "<p style='color:#ff6b6b;'>❌ Impossible de charger l'historique.</p>";
+                });
             }
         };
 
-        // --- 5. INTERFACE (L'AFFICHAGE) ---
+        // --- 5. INTERFACE & AFFICHAGE (LE PEINTRE) ---
         const UI = {
+            rankMode: 'session', // 'session' (%) ou 'serie' (/10)
+
             updateGameDisplay: function() {
                 let s = Game.state;
                 document.getElementById('disp-series').innerText = (s.currentSeries > CONFIG.MAX_SERIES ? "FIN" : s.currentSeries);
@@ -265,6 +335,170 @@
                 document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
                 document.getElementById('page-' + tabId).classList.add('active');
                 if(el) el.classList.add('active');
+
+                if (tabId === 'rank') {
+                    document.getElementById('leaderboard-list').innerHTML = "Actualisation...";
+                    API.fetchData(() => this.renderLeaderboard());
+                }
+            },
+
+            showMyProfile: function(el) {
+                document.getElementById('profile-title').innerText = "Mon Historique (" + Auth.user + ")";
+                document.getElementById('back-btn').style.display = 'none';
+                this.switchTab('profile', el);
+                document.getElementById('history-list').innerHTML = "Chargement de tes séances...";
+                API.fetchData(() => this.renderHistory(Auth.user));
+            },
+
+            viewUserProfile: function(targetPseudo) {
+                document.getElementById('profile-title').innerText = "Profil de " + targetPseudo;
+                document.getElementById('back-btn').style.display = 'inline-block';
+                this.switchTab('profile', document.getElementById('nav-rank'));
+                this.renderHistory(targetPseudo);
+            },
+
+            backToLeaderboard: function() {
+                this.switchTab('rank', document.getElementById('nav-rank'));
+            },
+
+            setRankMode: function(mode, btn) {
+                this.rankMode = mode;
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.renderLeaderboard();
+            },
+
+            getColor: function(pct) {
+                return pct >= 70 ? 'var(--success)' : pct >= 50 ? '#fdcb6e' : 'var(--danger)';
+            },
+
+            // Dessine l'historique d'un joueur avec les cases vertes/rouges
+            renderHistory: function(targetUser) {
+                const list = document.getElementById('history-list');
+                const userSessions = API.allData.filter(r => r.pseudo && r.pseudo.toString().toLowerCase() === targetUser.toLowerCase());
+                
+                if (userSessions.length === 0) {
+                    list.innerHTML = "<p style='color:#888; padding:30px;'>Aucune séance enregistrée pour ce joueur.</p>";
+                    return;
+                }
+
+                list.innerHTML = userSessions.map((s, idx) => {
+                    let d = new Date(s.date);
+                    let min = d.getMinutes() < 10 ? '0' + d.getMinutes() : d.getMinutes();
+                    let dateStr = isNaN(d.getTime()) ? "Date inconnue" : `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()} à ${d.getHours()}h${min}`;
+                    
+                    let rawDetails = s.details ? s.details.toString().trim() : "";
+                    let isBinaryFormat = rawDetails.length > 0 && /^[01|]+$/.test(rawDetails);
+
+                    let detailsHTML = "";
+                    if (isBinaryFormat) {
+                        let seriesArr = rawDetails.includes('|') ? rawDetails.split('|') : [rawDetails];
+                        detailsHTML = seriesArr.map((seq, i) => {
+                            let score = (seq.match(/1/g) || []).length;
+                            let grid = seq.split('').map(char => 
+                                `<div class="shot-mark ${char === '1' ? 'mark-yes' : 'mark-no'}">${char === '1' ? '✔' : '✖'}</div>`
+                            ).join('');
+                            
+                            return `
+                            <div class="detail-row">
+                                <div class="row-label">Série ${i+1}</div>
+                                <div class="row-grid">${grid}</div>
+                                <div class="row-total">${score}/${seq.length}</div>
+                            </div>`;
+                        }).join('');
+                    } else {
+                        detailsHTML = `<p style="font-size:0.8rem; color:#888; text-align:center; margin:0;">Aucun détail tir par tir disponible</p>`;
+                    }
+
+                    let borderColor = this.getColor(s.pct);
+
+                    return `
+                    <div class="list-item" style="border-left-color: ${borderColor};">
+                        <div class="item-header" onclick="UI.toggleDetails(${idx})">
+                            <div class="user-info" style="padding:0;">
+                                <span class="user-name">${dateStr}</span>
+                                <span class="user-meta">${s.reussis} réussis sur ${s.total} tirs (Clique pour voir les séries)</span>
+                            </div>
+                            <div class="score-badge" style="color:${borderColor}">${s.pct}%</div>
+                        </div>
+                        <div class="session-details" id="details-${idx}">
+                            ${detailsHTML}
+                        </div>
+                    </div>`;
+                }).join('');
+            },
+
+            toggleDetails: function(idx) {
+                let el = document.getElementById(`details-${idx}`);
+                if (el) el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+            },
+
+            // Dessine le Hall of Fame
+            renderLeaderboard: function() {
+                const list = document.getElementById('leaderboard-list');
+                if (API.allData.length === 0) {
+                    list.innerHTML = "<p style='color:#888; padding:20px;'>Aucune donnée dans le classement.</p>";
+                    return;
+                }
+
+                let usersMap = {};
+                
+                API.allData.forEach(s => {
+                    if (!s.pseudo) return;
+                    let key = s.pseudo.toString().trim().toLowerCase();
+                    let displayName = s.pseudo.toString().trim();
+
+                    if (!usersMap[key]) {
+                        usersMap[key] = { pseudo: displayName, bestSession: 0, bestSerie: 0, totalSessions: 0 };
+                    }
+                    
+                    usersMap[key].totalSessions++;
+                    let pct = Number(s.pct) || 0;
+                    if (pct > usersMap[key].bestSession) {
+                        usersMap[key].bestSession = pct;
+                    }
+                    
+                    // Calcul du record de série sur 10
+                    if (s.details) {
+                        let cleanDetails = s.details.toString().trim();
+                        if (/^[01|]+$/.test(cleanDetails)) {
+                            let series = cleanDetails.includes('|') ? cleanDetails.split('|') : [cleanDetails];
+                            series.forEach(seq => {
+                                let score = (seq.match(/1/g) || []).length;
+                                if (score > usersMap[key].bestSerie) {
+                                    usersMap[key].bestSerie = score;
+                                }
+                            });
+                        }
+                    }
+                });
+
+                let ranking = Object.values(usersMap);
+                if (this.rankMode === 'session') {
+                    ranking.sort((a, b) => b.bestSession - a.bestSession);
+                } else {
+                    ranking.sort((a, b) => b.bestSerie - a.bestSerie);
+                }
+
+                list.innerHTML = ranking.map((u, idx) => {
+                    let rank = idx + 1;
+                    let medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `#${rank}`;
+                    let scoreDisplay = this.rankMode === 'session' ? u.bestSession + "%" : u.bestSerie + "/10";
+                    let label = this.rankMode === 'session' ? `Meilleure Séance (${u.totalSessions} jouées)` : `Meilleure Série (${u.totalSessions} séances)`;
+                    let color = this.rankMode === 'session' ? this.getColor(u.bestSession) : 'var(--primary)';
+
+                    return `
+                    <div class="list-item" style="border-left-color: ${color};">
+                        <div class="item-header" onclick="UI.viewUserProfile('${u.pseudo.replace(/'/g, "\\'")}')">
+                            <div class="rank-badge">${medal}</div>
+                            <div class="user-info">
+                                <span class="user-name">${u.pseudo}</span>
+                                <span class="user-meta">${label}</span>
+                            </div>
+                            <div class="score-badge" style="color:${color}">${scoreDisplay}</div>
+                        </div>
+                    </div>`;
+                }).join('');
             }
         };
 
