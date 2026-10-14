@@ -3,263 +3,243 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Basket Pro V9 (Clean Code)</title>
+    <title>Basket Pro - V1.0 (Moteur Tactile)</title>
     <style>
-        /* --- DESIGN SYSTEM (CSS) --- */
+        /* ==========================================
+           BRIQUE 1 : LE DESIGN (CSS)
+           ========================================== */
         :root { --primary: #0984e3; --success: #00b894; --danger: #ff4757; --bg: #1a1a1a; --card: #2d3436; --text: #dfe6e9; }
-        body { font-family: sans-serif; text-align: center; background-color: var(--bg); color: var(--text); margin: 0; padding-bottom: 90px; user-select: none; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-align: center; background-color: var(--bg); color: var(--text); margin: 0; padding-bottom: 90px; user-select: none; -webkit-tap-highlight-color: transparent; }
         
-        /* Navigation */
-        .navbar { position: fixed; bottom: 0; width: 100%; background: #222; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #333; z-index: 100; }
+        /* Navigation (Barre du bas) */
+        .navbar { position: fixed; bottom: 0; width: 100%; background: #222; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #333; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
         .nav-item { color: #666; font-size: 0.8rem; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
-        .nav-item.active { color: var(--primary); transform: translateY(-2px); }
+        .nav-item.active { color: var(--primary); transform: translateY(-2px); font-weight: bold; }
         .nav-icon { font-size: 1.5rem; margin-bottom: 3px; }
 
-        /* Pages */
-        .page { display: none; padding: 20px; max-width: 600px; margin: 0 auto; animation: fadeIn 0.3s; }
+        /* Gestion des pages */
+        .page { display: none; padding: 20px; max-width: 600px; margin: 0 auto; animation: fadeIn 0.3s; padding-bottom: 120px; }
         .page.active { display: block; }
 
-        /* Login */
+        /* Écran de Connexion */
         #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        input { padding: 15px; font-size: 1.1rem; border-radius: 10px; border: 1px solid #444; background: #333; color: white; text-align: center; margin-bottom: 20px; width: 70%; }
+        input { padding: 15px; font-size: 1.1rem; border-radius: 10px; border: 1px solid #444; background: #333; color: white; text-align: center; margin-bottom: 20px; width: 70%; outline: none; }
+        input:focus { border-color: var(--primary); }
         
-        /* Stats Cards */
+        /* Cartes de Statistiques */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .stat-card { background: var(--card); padding: 15px 5px; border-radius: 12px; border: 1px solid #333; }
         .stat-val { font-size: 1.8rem; font-weight: bold; display: block; }
         .stat-lbl { font-size: 0.7rem; color: #aaa; text-transform: uppercase; }
 
-        /* Buttons */
+        /* Boutons et Zones Tactiles Géantes */
         .btn { border: none; border-radius: 12px; cursor: pointer; font-weight: bold; color: white; transition: transform 0.1s; }
         .btn:active { transform: scale(0.96); }
-        .btn-main { width: 100%; padding: 15px; background: var(--primary); font-size: 1rem; }
-        .btn-danger { background: var(--danger); }
-        .btn-success { background: var(--success); }
-        
-        .shoot-btns { display: flex; gap: 15px; height: 35vh; margin-bottom: 20px; }
-        .btn-shoot { flex: 1; font-size: 2rem; border-radius: 20px; display: flex; align-items: center; justify-content: center; flex-direction: column; }
-        .miss { background: linear-gradient(145deg, #e17055, #d63031); }
-        .make { background: linear-gradient(145deg, #00b894, #00cec9); }
+        .btn-main { width: 100%; padding: 15px; background: var(--primary); font-size: 1rem; margin-top: 10px; }
 
-        /* Lists & Details */
-        .list-item { background: var(--card); margin-bottom: 12px; padding: 15px; border-radius: 10px; text-align: left; border-left: 4px solid #444; }
-        .item-head { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .item-title { font-weight: bold; font-size: 1.1rem; }
-        .item-sub { font-size: 0.8rem; color: #888; }
-        .item-score { font-size: 1.4rem; font-weight: bold; }
+        .touch-zone-container { display: flex; height: 45vh; width: 100%; gap: 10px; margin-bottom: 15px; }
+        .touch-zone { flex: 1; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 3rem; font-weight: bold; opacity: 0.85; transition: opacity 0.1s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .touch-zone:active { opacity: 1; transform: scale(0.97); }
+        .zone-miss { background: linear-gradient(145deg, #e17055, #d63031); border: 2px solid #fab1a0; }
+        .zone-make { background: linear-gradient(145deg, #00b894, #00cec9); border: 2px solid #55efc4; }
+        .zone-label { font-size: 1.2rem; margin-top: 10px; text-transform: uppercase; }
 
-        .details-box { display: none; margin-top: 15px; padding-top: 10px; border-top: 1px solid #444; }
-        .detail-row { display: flex; margin-bottom: 8px; align-items: center; }
-        .row-lbl { width: 60px; font-size: 0.8rem; color: #888; }
-        .row-marks { flex: 1; display: flex; gap: 3px; flex-wrap: wrap; }
-        .mark { width: 18px; height: 18px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 10px; }
-        .mark-1 { background: rgba(0, 184, 148, 0.2); border: 1px solid var(--success); color: var(--success); }
-        .mark-0 { background: rgba(255, 71, 87, 0.2); border: 1px solid var(--danger); color: var(--danger); }
-
-        /* Debug / Error Message */
-        #status-msg { padding: 10px; margin-bottom: 10px; border-radius: 8px; font-size: 0.8rem; display: none; }
+        /* Messages de Statut (Sauvegarde) */
+        #status-msg { padding: 12px; margin-bottom: 10px; border-radius: 8px; font-size: 0.9rem; display: none; font-weight: bold; }
         .error { background: rgba(255, 71, 87, 0.2); color: #ff6b6b; border: 1px solid #ff6b6b; }
-        .loading { background: rgba(9, 132, 227, 0.2); color: #74b9ff; }
+        .loading { background: rgba(9, 132, 227, 0.2); color: #74b9ff; border: 1px solid #74b9ff; }
+        .success { background: rgba(0, 184, 148, 0.2); color: #00b894; border: 1px solid #00b894; }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
+    <!-- ==========================================
+         BRIQUE 2 : L'INTERFACE HTML
+         ========================================== -->
+
+    <!-- Écran de Connexion -->
     <div id="login-screen">
-        <h1>🏀 BASKET V9</h1>
+        <h1 style="color: var(--primary);">🏀 BASKET PRO</h1>
+        <p style="color:#888; font-size:0.9rem; margin-bottom: 25px;">Étape 2 : Moteur Tactile V1.0</p>
         <input type="text" id="pseudo-input" placeholder="Ton Pseudo (ex: Curry)">
-        <button class="btn btn-main" onclick="Auth.login()">COMMENCER</button>
+        <button class="btn btn-main" style="width: 70%;" onclick="Auth.login()">COMMENCER</button>
     </div>
 
+    <!-- Page 1 : LE JEU (Tracker) -->
     <div id="page-shoot" class="page active">
-        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-            <span id="user-display" style="color:var(--primary); font-weight:bold;">Joueur</span>
-            <span onclick="Auth.logout()" style="font-size:0.8rem; color:#666; cursor:pointer;">Déconnexion</span>
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items: center;">
+            <span style="font-size: 0.9rem; color: #aaa;">Joueur : <strong id="user-display" style="color:white; font-size: 1.1rem;">...</strong></span>
+            <span onclick="Auth.logout()" style="font-size:0.8rem; color:#ff7675; cursor:pointer; padding: 5px; border: 1px solid #ff7675; border-radius: 5px;">Déconnexion</span>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card"><span class="stat-val" id="disp-series">1</span><span class="stat-lbl">Série / 10</span></div>
-            <div class="stat-card"><span class="stat-val" id="disp-shots">0</span><span class="stat-lbl">Tirs / 10</span></div>
+            <div class="stat-card"><span class="stat-val" id="disp-shots" style="color: var(--primary);">0</span><span class="stat-lbl">Tirs / 10</span></div>
             <div class="stat-card"><span class="stat-val" id="disp-total">0%</span><span class="stat-lbl">Global</span></div>
         </div>
 
-        <div class="shoot-btns">
-            <button class="btn btn-shoot miss" onclick="Game.recordShot(0)">❌</button>
-            <button class="btn btn-shoot make" onclick="Game.recordShot(1)">✅</button>
+        <!-- Zones Tactiles Géantes -->
+        <div class="touch-zone-container">
+            <div class="touch-zone zone-miss" onclick="Game.recordShot(0)">
+                ❌<span class="zone-label">Raté</span>
+            </div>
+            <div class="touch-zone zone-make" onclick="Game.recordShot(1)">
+                ✅<span class="zone-label">Marqué</span>
+            </div>
         </div>
 
         <div id="status-msg"></div>
-
-        <button class="btn btn-main" onclick="API.saveSession()">💾 SAUVEGARDER</button>
+        <button class="btn btn-main" onclick="API.saveSession()">💾 SAUVEGARDER LA SÉANCE</button>
     </div>
 
+    <!-- Page 2 : CLASSEMENT (En construction pour l'étape 3) -->
     <div id="page-rank" class="page">
-        <h2>🏆 Classement & Historique</h2>
-        <div style="display:flex; gap:10px; margin-bottom:20px;">
-            <button class="btn btn-main" style="flex:1; background:#333;" onclick="UI.renderView('my-history')">Moi</button>
-            <button class="btn btn-main" style="flex:1; background:#333;" onclick="UI.renderView('leaderboard')">Top</button>
+        <h2>🏆 Historique & Classement</h2>
+        <div style="background: var(--card); padding: 30px; border-radius: 12px; margin-top: 20px; border: 1px dashed #666;">
+            <p style="font-size: 2rem; margin: 0;">🚧</p>
+            <p style="color: #aaa;">En construction.<br>Sera ajouté à l'Étape 3 !</p>
         </div>
-        <div id="data-list">Chargement...</div>
     </div>
 
+    <!-- Barre de Navigation -->
     <div class="navbar">
         <div class="nav-item active" onclick="UI.switchTab('shoot', this)">
-            <span class="nav-icon">🏀</span><span>Jeu</span>
+            <span class="nav-icon">🏀</span><span>Terrain</span>
         </div>
         <div class="nav-item" onclick="UI.switchTab('rank', this)">
-            <span class="nav-icon">🏆</span><span>Stats</span>
+            <span class="nav-icon">🏆</span><span>Classement</span>
         </div>
     </div>
 
+    <!-- ==========================================
+         BRIQUE 3 : LE MOTEUR JAVASCRIPT
+         ========================================== -->
     <script>
-        // =========================================================
-        // ⚙️ CONFIGURATION
-        // =========================================================
+        // --- 1. CONFIGURATION ---
         const CONFIG = {
-            // Colle ton lien /exec ici :
-            SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxN68AC3tCN4caxHOUSfIJtOXTVDROLQ98d2PYEo6sN62qCGQP2-E3Ews931BPlfNx6tw/exec",
+            SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxQ3OGPIyRNdyPpIn8mmxxQASFgXs7miWqep7RsyPeW7a-unfgTbxlgbArXH8GTYKGNeg/exec", // <-- REMPLACE CELA PAR TON LIEN GOOGLE SCRIPT
             MAX_SERIES: 10,
             SHOTS_PER_SERIES: 10
         };
 
-        // =========================================================
-        // 🎮 GAME LOGIC (Le Cerveau)
-        // =========================================================
-        const Game = {
-            state: {
-                currentSeries: 1,
-                shotsHistory: [], // [0, 1, 1...] pour la série en cours
-                sessionData: [],  // ["010101", "111000"] pour les séries finies
-                totalMakes: 0,
-                totalShots: 0
-            },
-
-            recordShot: function(result) {
-                if (this.state.currentSeries > CONFIG.MAX_SERIES) return alert("Séance terminée !");
-                
-                // Ajout à l'historique
-                this.state.shotsHistory.push(result);
-                this.state.totalShots++;
-                if (result === 1) this.state.totalMakes++;
-
-                UI.updateGameDisplay();
-
-                // Vérification fin de série
-                if (this.state.shotsHistory.length >= CONFIG.SHOTS_PER_SERIES) {
-                    // On convertit le tableau [1,0,1] en chaine "101"
-                    this.state.sessionData.push(this.state.shotsHistory.join(''));
-                    
-                    setTimeout(() => {
-                        this.state.shotsHistory = []; // Reset pour la prochaine série
-                        this.state.currentSeries++;
-                        UI.updateGameDisplay();
-                        if (this.state.currentSeries > CONFIG.MAX_SERIES) API.saveSession();
-                    }, 300);
-                }
-            },
-
-            reset: function() {
-                this.state = { currentSeries: 1, shotsHistory: [], sessionData: [], totalMakes: 0, totalShots: 0 };
-                UI.updateGameDisplay();
-            }
-        };
-
-        // =========================================================
-        // 🌐 API CLIENT (Le Facteur)
-        // =========================================================
-        const API = {
-            saveSession: function() {
-                if (Game.state.totalShots === 0) return;
-                if (!confirm("Sauvegarder la séance ?")) return;
-
-                UI.showStatus("Envoi en cours...", "loading");
-
-                // Préparation des données
-                // On joint les séries avec un pipe | pour avoir "101010|111000"
-                // Si une seule série (test), ça fera juste "101010"
-                let detailsStr = Game.state.sessionData.join('|');
-                let pct = Math.round((Game.state.totalMakes / Game.state.totalShots) * 100);
-
-                const payload = {
-                    pseudo: Auth.user,
-                    reussis: Game.state.totalMakes,
-                    total: Game.state.totalShots,
-                    pct: pct,
-                    details: detailsStr
-                };
-
-                fetch(CONFIG.SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', // Important pour Google Script
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                })
-                .then(() => {
-                    UI.showStatus("✅ Sauvegardé !", "loading"); // En no-cors on ne peut pas savoir si erreur, on suppose ok
-                    setTimeout(() => {
-                        Game.reset();
-                        UI.hideStatus();
-                        UI.switchTab('rank', document.querySelectorAll('.nav-item')[1]);
-                    }, 1000);
-                })
-                .catch(err => UI.showStatus("❌ Erreur Réseau : " + err, "error"));
-            },
-
-            fetchData: function(callback) {
-                UI.showStatus("Récupération des données...", "loading");
-                
-                // Vérif URL
-                if (CONFIG.SCRIPT_URL.includes("googleusercontent")) {
-                    return UI.showStatus("❌ Erreur Config : Mauvais lien Script !", "error");
-                }
-
-                fetch(CONFIG.SCRIPT_URL)
-                .then(res => res.json())
-                .then(data => {
-                    UI.hideStatus();
-                    callback(data);
-                })
-                .catch(err => {
-                    console.error(err);
-                    UI.showStatus("❌ Erreur Lecture (Vérifie les permissions 'Tout le monde' du script)", "error");
-                });
-            }
-        };
-
-        // =========================================================
-        // 👤 AUTHENTIFICATION
-        // =========================================================
+        // --- 2. AUTHENTIFICATION ---
         const Auth = {
-            user: localStorage.getItem('basket_user_v9'),
-            
+            user: localStorage.getItem('basket_user_v1'),
             init: function() {
                 if (this.user) {
                     document.getElementById('login-screen').style.display = 'none';
                     document.getElementById('user-display').innerText = this.user;
                 }
             },
-
             login: function() {
                 const val = document.getElementById('pseudo-input').value.trim();
-                if (val) {
-                    this.user = val;
-                    localStorage.setItem('basket_user_v9', val);
-                    this.init();
+                if (val) { 
+                    this.user = val; 
+                    localStorage.setItem('basket_user_v1', val); 
+                    this.init(); 
                 }
             },
-
             logout: function() {
-                if(confirm("Se déconnecter ?")) {
-                    localStorage.removeItem('basket_user_v9');
-                    location.reload();
+                if(confirm("Veux-tu te déconnecter ?")) { 
+                    localStorage.removeItem('basket_user_v1'); 
+                    location.reload(); 
                 }
             }
         };
 
-        // =========================================================
-        // 🎨 UI & AFFICHAGE (Le Peintre)
-        // =========================================================
+        // --- 3. LOGIQUE DE JEU (LE CERVEAU) ---
+        const Game = {
+            state: {
+                currentSeries: 1,
+                shotsHistory: [], // Tirs de la série en cours
+                sessionData: [],  // Historique complet (ex: ["101010", "111000"])
+                totalMakes: 0,
+                totalShots: 0
+            },
+            
+            recordShot: function(result) {
+                if (this.state.currentSeries > CONFIG.MAX_SERIES) {
+                    alert("Tu as atteint la limite de 10 séries. Pense à sauvegarder !");
+                    return;
+                }
+                
+                // On enregistre le tir
+                this.state.shotsHistory.push(result);
+                this.state.totalShots++;
+                if (result === 1) this.state.totalMakes++;
+                
+                UI.updateGameDisplay();
+
+                // Si la série de 10 est terminée
+                if (this.state.shotsHistory.length >= CONFIG.SHOTS_PER_SERIES) {
+                    // On convertit la série en texte (ex: 1,0,1 -> "101")
+                    this.state.sessionData.push(this.state.shotsHistory.join(''));
+                    
+                    setTimeout(() => {
+                        this.state.shotsHistory = []; // Reset pour la nouvelle série
+                        this.state.currentSeries++;
+                        UI.updateGameDisplay();
+                        
+                        if (this.state.currentSeries > CONFIG.MAX_SERIES) {
+                            alert("Fin de séance ! Enregistre tes scores.");
+                        }
+                    }, 300); // Petit délai pour laisser l'utilisateur voir son 10ème tir
+                }
+            },
+            
+            reset: function() {
+                this.state = { currentSeries: 1, shotsHistory: [], sessionData: [], totalMakes: 0, totalShots: 0 };
+                UI.updateGameDisplay();
+            }
+        };
+
+        // --- 4. CONNEXION GOOGLE SCRIPT (LE FACTEUR) ---
+        const API = {
+            saveSession: function() {
+                if (Game.state.totalShots === 0) {
+                    alert("Tu n'as fait aucun tir !");
+                    return;
+                }
+                if (!confirm("Veux-tu envoyer ces stats vers ton Google Sheet ?")) return;
+                
+                UI.showStatus("Sauvegarde en cours...", "loading");
+
+                // Préparation du colis de données
+                let detailsStr = Game.state.sessionData.join('|'); // Ex: "1010101010|1111000011"
+                let pct = Math.round((Game.state.totalMakes / Game.state.totalShots) * 100);
+
+                const payload = { 
+                    pseudo: Auth.user, 
+                    reussis: Game.state.totalMakes, 
+                    total: Game.state.totalShots, 
+                    pct: pct, 
+                    details: detailsStr 
+                };
+
+                // Envoi postal (POST)
+                fetch(CONFIG.SCRIPT_URL, {
+                    method: 'POST', 
+                    mode: 'no-cors', // Sécurité Google
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(() => {
+                    UI.showStatus("✅ Séance sauvegardée avec succès !", "success");
+                    setTimeout(() => { 
+                        Game.reset(); 
+                        UI.hideStatus(); 
+                    }, 2500);
+                })
+                .catch(err => {
+                    console.error(err);
+                    UI.showStatus("❌ Erreur réseau. Vérifie ta connexion.", "error");
+                });
+            }
+        };
+
+        // --- 5. INTERFACE (L'AFFICHAGE) ---
         const UI = {
             updateGameDisplay: function() {
                 let s = Game.state;
@@ -268,7 +248,7 @@
                 let pct = s.totalShots > 0 ? Math.round((s.totalMakes / s.totalShots) * 100) : 0;
                 document.getElementById('disp-total').innerText = pct + "%";
             },
-
+            
             showStatus: function(msg, type) {
                 const el = document.getElementById('status-msg');
                 el.style.display = 'block';
@@ -279,106 +259,16 @@
             hideStatus: function() {
                 document.getElementById('status-msg').style.display = 'none';
             },
-
+            
             switchTab: function(tabId, el) {
                 document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
                 document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
                 document.getElementById('page-' + tabId).classList.add('active');
                 if(el) el.classList.add('active');
-
-                if (tabId === 'rank') {
-                    // Par défaut on charge mon historique
-                    this.renderView('my-history');
-                }
-            },
-
-            renderView: function(viewType) {
-                const container = document.getElementById('data-list');
-                container.innerHTML = "Chargement...";
-                
-                API.fetchData((allData) => {
-                    // Tri par date
-                    allData.sort((a, b) => new Date(b.date) - new Date(a.date));
-                    let html = "";
-
-                    if (viewType === 'my-history') {
-                        // Filtre MON pseudo
-                        const myData = allData.filter(r => r.pseudo.toLowerCase() === Auth.user.toLowerCase());
-                        if (myData.length === 0) return container.innerHTML = "Pas encore de stats.";
-                        
-                        html = myData.map((session, idx) => this.createSessionCard(session, idx)).join('');
-                    
-                    } else if (viewType === 'leaderboard') {
-                        // Classement (Pseudo unique)
-                        let map = {};
-                        allData.forEach(r => {
-                            if (!map[r.pseudo] || r.pct > map[r.pseudo].pct) map[r.pseudo] = r;
-                        });
-                        let ranking = Object.values(map).sort((a,b) => b.pct - a.pct);
-                        
-                        html = ranking.map((r, idx) => `
-                            <div class="list-item" style="border-left-color:${r.pct>=50?'var(--success)':'var(--danger)'}">
-                                <div class="item-head">
-                                    <span style="font-size:1.5rem; width:40px;">#${idx+1}</span>
-                                    <div>
-                                        <div class="item-title">${r.pseudo}</div>
-                                        <div class="item-sub">Record : ${r.reussis}/${r.total}</div>
-                                    </div>
-                                    <div class="item-score">${r.pct}%</div>
-                                </div>
-                            </div>
-                        `).join('');
-                    }
-                    container.innerHTML = html;
-                });
-            },
-
-            createSessionCard: function(session, idx) {
-                let d = new Date(session.date);
-                let dateStr = `${d.getDate()}/${d.getMonth()+1} - ${d.getHours()}h${d.getMinutes()}`;
-                let color = session.pct >= 50 ? 'var(--success)' : 'var(--danger)';
-                
-                // Génération des détails visuels (Vert/Rouge)
-                let detailsHtml = "";
-                let rawDetails = session.details ? session.details.toString() : "";
-                
-                // On détecte si c'est du "V8/V9" (contient des 0 et 1)
-                if (rawDetails.match(/^[01|]+$/)) {
-                    // On sépare les séries par | ou on prend le bloc entier si pas de |
-                    let series = rawDetails.includes('|') ? rawDetails.split('|') : [rawDetails];
-                    
-                    detailsHtml = series.map((seq, i) => {
-                        let score = (seq.match(/1/g) || []).length;
-                        let marks = seq.split('').map(c => `<div class="mark mark-${c}">${c==1?'✔':''}</div>`).join('');
-                        
-                        return `
-                        <div class="detail-row">
-                            <div class="row-lbl">Série ${i+1}</div>
-                            <div class="row-marks">${marks}</div>
-                            <div style="font-weight:bold; font-size:0.8rem;">${score}/${seq.length}</div>
-                        </div>`;
-                    }).join('');
-                } else {
-                    detailsHtml = "<div style='font-size:0.8rem; color:#888;'>Ancien format de données</div>";
-                }
-
-                return `
-                <div class="list-item" style="border-left-color:${color}">
-                    <div class="item-head" onclick="document.getElementById('det-${idx}').style.display = document.getElementById('det-${idx}').style.display=='block'?'none':'block'">
-                        <div>
-                            <div class="item-title">${dateStr}</div>
-                            <div class="item-sub">${session.reussis}/${session.total} Tirs</div>
-                        </div>
-                        <div class="item-score" style="color:${color}">${session.pct}%</div>
-                    </div>
-                    <div class="details-box" id="det-${idx}">
-                        ${detailsHtml}
-                    </div>
-                </div>`;
             }
         };
 
-        // Démarrage
+        // Démarrage de l'application
         Auth.init();
     </script>
 </body>
